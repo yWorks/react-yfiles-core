@@ -1,0 +1,29 @@
+.yfiles-react-timeline__play-button {
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border: none;
+  outline: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 32px 32px;
+  margin: 8px 0 0 8px;
+  background-color: transparent;
+  display: inline-block;
+}
+
+.yfiles-react-timeline__play-button--idle {
+  background-image: url('./icons/play.svg');
+}
+
+.yfiles-react-timeline__play-button--idle:hover {
+  background-image: url('./icons/play-hovered.svg');
+}
+
+.yfiles-react-timeline__play-button--playing {
+  background-image: url('./icons/stop.svg');
+}
+
+.yfiles-react-timeline__play-button--playing:hover {
+  background-image: url('./icons/stop-hovered.svg');
+}

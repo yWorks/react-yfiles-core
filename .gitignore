@@ -1,0 +1,7 @@
+node_modules
+dist/
+.idea/workspace.xml
+license.json
+*.tsbuildinfo
+.tsup/*
+package-lock.json

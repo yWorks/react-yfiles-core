@@ -1,0 +1,19 @@
+.yfiles-react-timeline__tooltip {
+  background-color: #ffffff;
+  border-color: #4281a4;
+  border-width: 2px;
+  border-radius: 20px;
+  border-style: solid;
+  padding: 5px 7px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.yfiles-react-timeline__tooltip-title {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.yfiles-react-timeline__tooltip-content {
+  font-size: 14px;
+}

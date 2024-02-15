@@ -1,0 +1,14 @@
+.yfiles-react-tooltip {
+    color: #242424;
+    background-color: white;
+    font-family: Roboto, sans-serif;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid steelblue;
+}
+
+.yfiles-tooltip {
+    padding: 0;
+    border: none;
+    background-color: transparent;
+}
