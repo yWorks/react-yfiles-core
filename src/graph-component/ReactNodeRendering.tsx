@@ -11,7 +11,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { FilteredGraphWrapper, INode, Rect } from 'yfiles'
+import { FilteredGraphWrapper, GraphComponent, IGraph, INode, Rect } from 'yfiles'
 import {
   NodeRenderInfo,
   RenderNodeProps,
@@ -80,6 +80,11 @@ export function ReactNodeRendering<TDataItem>({
   )
 }
 
+function getMasterGraph(graphComponent: GraphComponent): IGraph {
+  let graph = graphComponent.graph.foldingView?.manager.masterGraph ?? graphComponent.graph
+  return graph instanceof FilteredGraphWrapper ? graph.wrappedGraph! : graph
+}
+
 function NodeMeasurement<TDataItem>({
   nodeData,
   nodeSize,
@@ -102,7 +107,7 @@ function NodeMeasurement<TDataItem>({
     setMeasured(false)
     myRef.current = []
     if (!nodeSize) {
-      const graph = (graphComponent.graph as FilteredGraphWrapper).wrappedGraph!
+      const graph = getMasterGraph(graphComponent)
       const elements: ReactNode[] = []
       let index = 0
       for (const node of graph.nodes) {
@@ -149,7 +154,7 @@ function NodeMeasurement<TDataItem>({
           const newWidth = node.tag.width ?? (width || fallbackNodeSize.width)
           const newHeight = node.tag.height ?? (height || fallbackNodeSize.height)
           if (newWidth !== node.layout.width || newHeight !== node.layout.height) {
-            graphComponent.graph.setNodeLayout(
+            getMasterGraph(graphComponent).setNodeLayout(
               node,
               new Rect(node.layout.x, node.layout.y, newWidth, newHeight)
             )
