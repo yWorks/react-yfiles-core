@@ -14,11 +14,12 @@ import {
 import { FilteredGraphWrapper, GraphComponent, IGraph, INode, Rect } from 'yfiles'
 import {
   NodeRenderInfo,
-  RenderNodeProps,
-  ReactComponentHtmlNodeStyle
+  ReactComponentHtmlNodeStyle,
+  RenderNodeProps
 } from './ReactComponentHtmlNodeStyle.ts'
 import { useGraphComponent } from './GraphComponentProvider.tsx'
 import { createPortal } from 'react-dom'
+import { ReactComponentHtmlGroupNodeStyle } from './ReactComponentHtmlGroupNodeStyle.ts'
 
 export function useReactNodeRendering<TDataItem>(): {
   nodeInfos: NodeRenderInfo<TDataItem>[]
@@ -112,13 +113,22 @@ function NodeMeasurement<TDataItem>({
       let index = 0
       for (const node of graph.nodes) {
         if (!(node.tag.width && node.tag.height)) {
-          // if a template measure is needed, create an element and measure its size
-          const style = node.style as ReactComponentHtmlNodeStyle<TDataItem>
+          const style = node.style
           const nodeTemplateRef = {
             node,
             ref: createRef<HTMLDivElement>()
           }
           myRef.current.push(nodeTemplateRef)
+          let nodeElement
+          if (style instanceof ReactComponentHtmlNodeStyle) {
+            nodeElement = createElement(style.component, getMeasureNodeProps(node))
+          } else if (style instanceof ReactComponentHtmlGroupNodeStyle) {
+            const foldingView = graphComponent.graph.foldingView
+            nodeElement = createElement(style.component, {
+              ...getMeasureNodeProps(node),
+              isFolderNode: foldingView ? !foldingView.isExpanded(node) : false
+            })
+          }
           const element = (
             <div
               ref={nodeTemplateRef.ref}
@@ -126,15 +136,7 @@ function NodeMeasurement<TDataItem>({
               key={index}
               style={{ position: 'absolute' }}
             >
-              {createElement(style.component, {
-                selected: false,
-                hovered: false,
-                focused: false,
-                width: fallbackNodeSize.width,
-                height: fallbackNodeSize.height,
-                detail: 'high',
-                dataItem: node.tag
-              })}
+              {nodeElement}
             </div>
           )
           elements.push(element)
@@ -194,4 +196,16 @@ function RenderNodes<TDataItem>({ nodeInfos, onRendered }: RenderNodesProps<TDat
   )
 
   return <>{nodes}</>
+}
+
+function getMeasureNodeProps(node: INode): RenderNodeProps<any> {
+  return {
+    selected: false,
+    hovered: false,
+    focused: false,
+    width: fallbackNodeSize.width,
+    height: fallbackNodeSize.height,
+    detail: 'high',
+    dataItem: node.tag
+  }
 }
