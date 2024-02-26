@@ -46,6 +46,7 @@ type NodeTemplateRef = {
 type NodeMeasurementProps<TDataItem> = {
   nodeData: TDataItem[]
   nodeSize?: { width: number; height: number }
+  maxSize?: { width: number; height: number }
   onMeasured?: () => void
   updateMeasurement: boolean
 }
@@ -64,6 +65,7 @@ export function ReactNodeRendering<TDataItem>({
   nodeData,
   nodeInfos,
   nodeSize,
+  maxSize,
   updateMeasurement,
   onMeasured,
   onRendered
@@ -73,6 +75,7 @@ export function ReactNodeRendering<TDataItem>({
       <NodeMeasurement
         nodeData={nodeData}
         nodeSize={nodeSize}
+        maxSize={maxSize}
         updateMeasurement={updateMeasurement}
         onMeasured={onMeasured}
       ></NodeMeasurement>
@@ -89,6 +92,7 @@ function getMasterGraph(graphComponent: GraphComponent): IGraph {
 function NodeMeasurement<TDataItem>({
   nodeData,
   nodeSize,
+  maxSize,
   onMeasured,
   updateMeasurement
 }: NodeMeasurementProps<TDataItem>) {
@@ -153,8 +157,12 @@ function NodeMeasurement<TDataItem>({
         if (node && ref.current) {
           // get the size of the template and assign its size to the node (only if the node has no specific size stored in its data)
           const { width, height } = ref.current.firstElementChild!.getBoundingClientRect()
-          const newWidth = node.tag.width ?? (width || fallbackNodeSize.width)
-          const newHeight = node.tag.height ?? (height || fallbackNodeSize.height)
+          const newWidth =
+            node.tag.width ??
+            Math.min(width || fallbackNodeSize.width, maxSize?.width ?? Number.POSITIVE_INFINITY)
+          const newHeight =
+            node.tag.height ??
+            Math.min(height || fallbackNodeSize.height, maxSize?.height ?? Number.POSITIVE_INFINITY)
           if (newWidth !== node.layout.width || newHeight !== node.layout.height) {
             getMasterGraph(graphComponent).setNodeLayout(
               node,
