@@ -1,5 +1,7 @@
 import { DefaultGraph, License } from 'yfiles'
 
+export let license: Record<string, unknown>
+
 /**
  * Registers the [yFiles license]{@link http://docs.yworks.com/yfileshtml/#/dguide/licensing} which is needed to
  * use the {@link OrgChart} component which is based on yFiles for HTML.
@@ -17,6 +19,7 @@ import { DefaultGraph, License } from 'yfiles'
  * @param licenseKey - The license key to register
  */
 export function registerLicense(licenseKey: Record<string, unknown>) {
+  license = licenseKey
   License.value = licenseKey
 }
 
