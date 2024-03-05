@@ -24,3 +24,4 @@ export {
   exportImageAndSave,
   type ExportSettings
 } from './utils/ExportSupport.ts'
+export { createWebWorker } from './utils/WebworkerSupport.ts'

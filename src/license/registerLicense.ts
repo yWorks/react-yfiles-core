@@ -1,6 +1,5 @@
 import { DefaultGraph, License } from 'yfiles'
-
-export let license: Record<string, unknown>
+import { setWebWorkerLicense } from '../utils/WebworkerSupport.ts'
 
 /**
  * Registers the [yFiles license]{@link http://docs.yworks.com/yfileshtml/#/dguide/licensing} which is needed to
@@ -19,8 +18,8 @@ export let license: Record<string, unknown>
  * @param licenseKey - The license key to register
  */
 export function registerLicense(licenseKey: Record<string, unknown>) {
-  license = licenseKey
   License.value = licenseKey
+  setWebWorkerLicense(licenseKey)
 }
 
 /**
