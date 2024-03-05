@@ -19,7 +19,10 @@ import {
 } from './ReactComponentHtmlNodeStyle.ts'
 import { useGraphComponent } from './GraphComponentProvider.tsx'
 import { createPortal } from 'react-dom'
-import { ReactComponentHtmlGroupNodeStyle } from './ReactComponentHtmlGroupNodeStyle.ts'
+import {
+  ReactComponentHtmlGroupNodeStyle,
+  RenderGroupNodeProps
+} from './ReactComponentHtmlGroupNodeStyle.ts'
 
 export function useReactNodeRendering<TDataItem>(): {
   nodeInfos: NodeRenderInfo<TDataItem>[]
@@ -131,7 +134,7 @@ function NodeMeasurement<TDataItem>({
             nodeElement = createElement(style.component, {
               ...getMeasureNodeProps(node),
               isFolderNode: foldingView ? !foldingView.isExpanded(node) : false
-            })
+            } as RenderGroupNodeProps<any>)
           }
           const element = (
             <div

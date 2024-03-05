@@ -59,11 +59,6 @@ export interface RenderNodeProps<TDataItem> {
    * The data item to render.
    */
   dataItem: TDataItem
-
-  /**
-   * Other props.
-   */
-  [key: string]: unknown
 }
 
 /**
