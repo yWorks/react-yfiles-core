@@ -10,12 +10,12 @@ type NodeTemplate<TDataItem> = ComponentType<RenderNodeProps<TDataItem>>
 /**
  * Helper for the ReactComponentHtmlNodeStyle to factor out the props retrieval per node.
  */
-type TagProvider<TDataItem> = (context: IRenderContext, node: INode) => TDataItem
+export type TagProvider<TDataItem> = (context: IRenderContext, node: INode) => TDataItem
 
 /**
  * The default implementation just uses the props from the tag of the item to be rendered.
  */
-const defaultTagProvider: TagProvider<any> = (_, node) => node.tag
+export const defaultTagProvider: TagProvider<any> = (_, node) => node.tag
 
 /**
  * The information necessary to render a node in the context of its parent component with portals.
@@ -103,7 +103,7 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
     this.component = memoizedComponent
   }
 
-  createProps(
+  protected createProps(
     context: IRenderContext,
     node: INode,
     cloneData: boolean
@@ -189,7 +189,7 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
     return oldVisual
   }
 
-  private areEqual(oldProps: RenderNodeProps<TDataItem>, newProps: RenderNodeProps<TDataItem>) {
+  protected areEqual(oldProps: RenderNodeProps<TDataItem>, newProps: RenderNodeProps<TDataItem>) {
     return (
       oldProps.selected === newProps.selected &&
       oldProps.hovered === newProps.hovered &&

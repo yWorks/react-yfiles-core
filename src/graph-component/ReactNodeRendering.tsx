@@ -11,14 +11,18 @@ import {
   useRef,
   useState
 } from 'react'
-import { FilteredGraphWrapper, INode, Rect } from 'yfiles'
+import { FilteredGraphWrapper, GraphComponent, IGraph, INode, Rect } from 'yfiles'
 import {
   NodeRenderInfo,
-  RenderNodeProps,
-  ReactComponentHtmlNodeStyle
+  ReactComponentHtmlNodeStyle,
+  RenderNodeProps
 } from './ReactComponentHtmlNodeStyle.ts'
 import { useGraphComponent } from './GraphComponentProvider.tsx'
 import { createPortal } from 'react-dom'
+import {
+  ReactComponentHtmlGroupNodeStyle,
+  RenderGroupNodeProps
+} from './ReactComponentHtmlGroupNodeStyle.ts'
 
 export function useReactNodeRendering<TDataItem>(): {
   nodeInfos: NodeRenderInfo<TDataItem>[]
@@ -45,6 +49,7 @@ type NodeTemplateRef = {
 type NodeMeasurementProps<TDataItem> = {
   nodeData: TDataItem[]
   nodeSize?: { width: number; height: number }
+  maxSize?: { width: number; height: number }
   onMeasured?: () => void
   updateMeasurement: boolean
 }
@@ -63,6 +68,7 @@ export function ReactNodeRendering<TDataItem>({
   nodeData,
   nodeInfos,
   nodeSize,
+  maxSize,
   updateMeasurement,
   onMeasured,
   onRendered
@@ -72,6 +78,7 @@ export function ReactNodeRendering<TDataItem>({
       <NodeMeasurement
         nodeData={nodeData}
         nodeSize={nodeSize}
+        maxSize={maxSize}
         updateMeasurement={updateMeasurement}
         onMeasured={onMeasured}
       ></NodeMeasurement>
@@ -80,9 +87,15 @@ export function ReactNodeRendering<TDataItem>({
   )
 }
 
+function getMasterGraph(graphComponent: GraphComponent): IGraph {
+  let graph = graphComponent.graph.foldingView?.manager.masterGraph ?? graphComponent.graph
+  return graph instanceof FilteredGraphWrapper ? graph.wrappedGraph! : graph
+}
+
 function NodeMeasurement<TDataItem>({
   nodeData,
   nodeSize,
+  maxSize,
   onMeasured,
   updateMeasurement
 }: NodeMeasurementProps<TDataItem>) {
@@ -102,18 +115,27 @@ function NodeMeasurement<TDataItem>({
     setMeasured(false)
     myRef.current = []
     if (!nodeSize) {
-      const graph = (graphComponent.graph as FilteredGraphWrapper).wrappedGraph!
+      const graph = getMasterGraph(graphComponent)
       const elements: ReactNode[] = []
       let index = 0
       for (const node of graph.nodes) {
         if (!(node.tag.width && node.tag.height)) {
-          // if a template measure is needed, create an element and measure its size
-          const style = node.style as ReactComponentHtmlNodeStyle<TDataItem>
+          const style = node.style
           const nodeTemplateRef = {
             node,
             ref: createRef<HTMLDivElement>()
           }
           myRef.current.push(nodeTemplateRef)
+          let nodeElement
+          if (style instanceof ReactComponentHtmlNodeStyle) {
+            nodeElement = createElement(style.component, getMeasureNodeProps(node))
+          } else if (style instanceof ReactComponentHtmlGroupNodeStyle) {
+            const foldingView = graphComponent.graph.foldingView
+            nodeElement = createElement(style.component, {
+              ...getMeasureNodeProps(node),
+              isFolderNode: foldingView ? !foldingView.isExpanded(node) : false
+            } as RenderGroupNodeProps<any>)
+          }
           const element = (
             <div
               ref={nodeTemplateRef.ref}
@@ -121,15 +143,7 @@ function NodeMeasurement<TDataItem>({
               key={index}
               style={{ position: 'absolute' }}
             >
-              {createElement(style.component, {
-                selected: false,
-                hovered: false,
-                focused: false,
-                width: fallbackNodeSize.width,
-                height: fallbackNodeSize.height,
-                detail: 'high',
-                dataItem: node.tag
-              })}
+              {nodeElement}
             </div>
           )
           elements.push(element)
@@ -146,10 +160,14 @@ function NodeMeasurement<TDataItem>({
         if (node && ref.current) {
           // get the size of the template and assign its size to the node (only if the node has no specific size stored in its data)
           const { width, height } = ref.current.firstElementChild!.getBoundingClientRect()
-          const newWidth = node.tag.width ?? (width || fallbackNodeSize.width)
-          const newHeight = node.tag.height ?? (height || fallbackNodeSize.height)
+          const newWidth =
+            node.tag.width ??
+            Math.min(width || fallbackNodeSize.width, maxSize?.width ?? Number.POSITIVE_INFINITY)
+          const newHeight =
+            node.tag.height ??
+            Math.min(height || fallbackNodeSize.height, maxSize?.height ?? Number.POSITIVE_INFINITY)
           if (newWidth !== node.layout.width || newHeight !== node.layout.height) {
-            graphComponent.graph.setNodeLayout(
+            getMasterGraph(graphComponent).setNodeLayout(
               node,
               new Rect(node.layout.x, node.layout.y, newWidth, newHeight)
             )
@@ -189,4 +207,16 @@ function RenderNodes<TDataItem>({ nodeInfos, onRendered }: RenderNodesProps<TDat
   )
 
   return <>{nodes}</>
+}
+
+function getMeasureNodeProps(node: INode): RenderNodeProps<any> {
+  return {
+    selected: false,
+    hovered: false,
+    focused: false,
+    width: fallbackNodeSize.width,
+    height: fallbackNodeSize.height,
+    detail: 'high',
+    dataItem: node.tag
+  }
 }

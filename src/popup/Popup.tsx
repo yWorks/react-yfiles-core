@@ -20,6 +20,7 @@ import {
   IModelItem,
   INode,
   ItemClickedEventArgs,
+  ItemTappedEventArgs,
   Point,
   SimpleLabel,
   Size
@@ -62,6 +63,15 @@ export interface PopupProps<TDataItem> {
    * An optional custom that renders a custom popup.
    */
   renderPopup?: ComponentType<RenderPopupProps<TDataItem>>
+
+  /**
+   * Determines after which input event the pop-up appears:
+   * single-click or double-click on the left mouse button, as well as
+   * single-tap or double-tap on a touch device
+   *
+   * The default is single-click.
+   */
+  clickMode?: 'single' | 'double'
 }
 
 /**
@@ -70,7 +80,8 @@ export interface PopupProps<TDataItem> {
  */
 export function Popup<TDataItem>({
   renderPopup,
-  position
+  position,
+  clickMode
 }: PopupProps<TDataItem> & PropsWithChildren) {
   const graphComponent = useGraphComponent()!
   const [location, setLocation] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -103,12 +114,37 @@ export function Popup<TDataItem>({
     const itemClickedListener = (_: GraphInputMode, evt: ItemClickedEventArgs<IModelItem>) => {
       setCurrentItem(evt.item instanceof INode || evt.item instanceof IEdge ? evt.item : null)
     }
-    inputMode.addItemClickedListener(itemClickedListener)
+    const itemTappedListener = (_: GraphInputMode, evt: ItemTappedEventArgs<IModelItem>) => {
+      setCurrentItem(evt.item instanceof INode || evt.item instanceof IEdge ? evt.item : null)
+    }
+
+    switch (clickMode) {
+      case 'double':
+        inputMode.addItemLeftDoubleClickedListener(itemClickedListener)
+        inputMode.addItemDoubleTappedListener(itemTappedListener)
+        break
+      case 'single':
+      default:
+        inputMode.addItemLeftClickedListener(itemClickedListener)
+        inputMode.addItemTappedListener(itemTappedListener)
+        break
+    }
 
     return () => {
       // clean up
       inputMode.removeCanvasClickedListener(canvasClickedListener)
-      inputMode.removeItemClickedListener(itemClickedListener)
+
+      switch (clickMode) {
+        case 'double':
+          inputMode.removeItemLeftDoubleClickedListener(itemClickedListener)
+          inputMode.removeItemDoubleTappedListener(itemTappedListener)
+          break
+        case 'single':
+        default:
+          inputMode.removeItemLeftClickedListener(itemClickedListener)
+          inputMode.removeItemTappedListener(itemTappedListener)
+          break
+      }
     }
   }, [graphComponent])
   const template = renderPopup ?? (DefaultRenderPopup as ComponentType<RenderPopupProps<TDataItem>>)
