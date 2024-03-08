@@ -8,7 +8,7 @@ export function setWebWorkerLicense(licensePar: Record<string, unknown>) {
 }
 
 /**
- * Creates a web worker and sends it a license message.
+ * Waits for the Web Worker to ready up and sends the license to it.
  * Returns a promise that resolves to the worker once the worker has sent
  * a 'licensed' message.
  *
@@ -24,14 +24,10 @@ export function setWebWorkerLicense(licensePar: Record<string, unknown>) {
  * ```
  *
  */
-export function createWebWorker(url: URL): Promise<Worker> {
+export function registerWebWorker(worker: Worker): Promise<Worker> {
   if (license === null) {
     throw new Error('License not initialized.')
   }
-
-  const worker = new Worker(url, {
-    type: 'module'
-  })
 
   return new Promise(resolve => {
     worker.onmessage = event => {
@@ -43,5 +39,9 @@ export function createWebWorker(url: URL): Promise<Worker> {
         resolve(worker)
       }
     }
+
+    // check if worker is already alive and ready, e.g. when switching between component instances
+    // with and without worker support, but without terminating the worker
+    worker.postMessage('check-is-ready')
   })
 }
