@@ -3,7 +3,7 @@ import { setWebWorkerLicense } from '../utils/WebworkerSupport.ts'
 
 /**
  * Registers the [yFiles license]{@link http://docs.yworks.com/yfileshtml/#/dguide/licensing} which is needed to
- * use the {@link OrgChart} component which is based on yFiles for HTML.
+ * use the yFiles React component.
  *
  * ```tsx
  * function App() {
