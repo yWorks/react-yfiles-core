@@ -30,6 +30,8 @@ export function useGraphSearch<TDataItem, TNeedle>(
   useEffect(() => {
     updateSearch()
   }, [searchQuery, updateSearch])
+
+  return graphSearch
 }
 
 class NodeTagSearch<TDataItem, TNeedle> extends GraphSearch<TNeedle> {
