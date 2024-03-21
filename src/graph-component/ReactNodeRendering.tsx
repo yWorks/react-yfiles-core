@@ -46,7 +46,9 @@ type NodeTemplateRef = {
   node: INode | null
 }
 
-type NodeMeasurementProps<TDataItem> = {
+type SizedDataItem = { width?: number; height?: number }
+
+type NodeMeasurementProps<TDataItem extends SizedDataItem> = {
   nodeData: TDataItem[]
   nodeSize?: { width: number; height: number }
   maxSize?: { width: number; height: number }
@@ -59,12 +61,12 @@ type RenderNodesProps<TDataItem> = {
   onRendered?: () => void
 }
 
-export type ReactNodeRenderingProps<TDataItem> = NodeMeasurementProps<TDataItem> &
-  RenderNodesProps<TDataItem>
+export type ReactNodeRenderingProps<TDataItem extends SizedDataItem> =
+  NodeMeasurementProps<TDataItem> & RenderNodesProps<TDataItem>
 
 const fallbackNodeSize = { width: 285, height: 100 }
 
-export function ReactNodeRendering<TDataItem>({
+export function ReactNodeRendering<TDataItem extends SizedDataItem>({
   nodeData,
   nodeInfos,
   nodeSize,
@@ -92,7 +94,7 @@ function getMasterGraph(graphComponent: GraphComponent): IGraph {
   return graph instanceof FilteredGraphWrapper ? graph.wrappedGraph! : graph
 }
 
-function NodeMeasurement<TDataItem>({
+function NodeMeasurement<TDataItem extends SizedDataItem>({
   nodeData,
   nodeSize,
   maxSize,
@@ -102,18 +104,20 @@ function NodeMeasurement<TDataItem>({
   const graphComponent = useGraphComponent()!
 
   const [measureElements, setMeasureElements] = useState<ReactNode[]>([])
-  const [measured, setMeasured] = useState<boolean>(false)
 
   const measureParent = useRef<HTMLDivElement>(null)
   const myRef = useRef<NodeTemplateRef[]>([])
 
   useEffect(() => {
-    setMeasured(false)
-  }, [nodeData])
+    const shouldMeasure = !nodeSize && nodeData.some(item => !('width' in item && 'height' in item))
 
-  useEffect(() => {
-    setMeasured(false)
+    if (!shouldMeasure) {
+      onMeasured?.()
+      return
+    }
+
     myRef.current = []
+
     if (!nodeSize) {
       const graph = getMasterGraph(graphComponent)
       const elements: ReactNode[] = []
@@ -155,7 +159,22 @@ function NodeMeasurement<TDataItem>({
   }, [graphComponent, nodeData, updateMeasurement])
 
   useLayoutEffect(() => {
-    if (!measured && measureParent.current) {
+    if (measureElements.length > 0 && measureParent.current) {
+      // All items that need to be measured
+      const dataItemsToMeasure = nodeData.filter(item => !('width' in item && 'height' in item))
+
+      // All node data in the prepared refs
+      const refNodeData = myRef.current.map(value => value.node!.tag)
+
+      // Whether the prepared refs match the data items to be measured
+      const readyForMeasuring =
+        refNodeData.every(nodeTag => dataItemsToMeasure.some(dataItem => nodeTag === dataItem)) &&
+        dataItemsToMeasure.length === refNodeData.length
+
+      if (!readyForMeasuring) {
+        return
+      }
+
       for (const { ref, node } of myRef.current) {
         if (node && ref.current) {
           // get the size of the template and assign its size to the node (only if the node has no specific size stored in its data)
@@ -174,14 +193,14 @@ function NodeMeasurement<TDataItem>({
           }
         }
       }
-      setMeasured(true)
+
       onMeasured && onMeasured()
     }
-  }, [measured, measureParent.current])
+  }, [measureElements, measureParent.current])
 
   return (
     <>
-      {!measured && (
+      {measureElements.length > 0 && (
         <div className="yfiles-react-measure-container" ref={measureParent}>
           {measureElements}
         </div>
