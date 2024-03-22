@@ -27,17 +27,11 @@ import {
 export function useReactNodeRendering<TDataItem>(): {
   nodeInfos: NodeRenderInfo<TDataItem>[]
   setNodeInfos: Dispatch<SetStateAction<NodeRenderInfo<TDataItem>[]>>
-  forceUpdateMeasurement: boolean
-  updateMeasurement: () => void
 } {
   const [nodeInfos, setNodeInfos] = useState<NodeRenderInfo<TDataItem>[]>([])
-  const [forceUpdateMeasurement, setForceUpdateMeasurement] = useState(false)
   return {
     nodeInfos,
-    setNodeInfos,
-    forceUpdateMeasurement,
-    // toggles the measurement state to make sure that measurement occurs when needed
-    updateMeasurement: () => setForceUpdateMeasurement(!forceUpdateMeasurement)
+    setNodeInfos
   }
 }
 
@@ -46,12 +40,13 @@ type NodeTemplateRef = {
   node: INode | null
 }
 
-type NodeMeasurementProps<TDataItem> = {
+type SizedDataItem = { width?: number; height?: number }
+
+type NodeMeasurementProps<TDataItem extends SizedDataItem> = {
   nodeData: TDataItem[]
   nodeSize?: { width: number; height: number }
   maxSize?: { width: number; height: number }
   onMeasured?: () => void
-  updateMeasurement: boolean
 }
 
 type RenderNodesProps<TDataItem> = {
@@ -59,17 +54,16 @@ type RenderNodesProps<TDataItem> = {
   onRendered?: () => void
 }
 
-export type ReactNodeRenderingProps<TDataItem> = NodeMeasurementProps<TDataItem> &
-  RenderNodesProps<TDataItem>
+export type ReactNodeRenderingProps<TDataItem extends SizedDataItem> =
+  NodeMeasurementProps<TDataItem> & RenderNodesProps<TDataItem>
 
 const fallbackNodeSize = { width: 285, height: 100 }
 
-export function ReactNodeRendering<TDataItem>({
+export function ReactNodeRendering<TDataItem extends SizedDataItem>({
   nodeData,
   nodeInfos,
   nodeSize,
   maxSize,
-  updateMeasurement,
   onMeasured,
   onRendered
 }: ReactNodeRenderingProps<TDataItem>) {
@@ -79,7 +73,6 @@ export function ReactNodeRendering<TDataItem>({
         nodeData={nodeData}
         nodeSize={nodeSize}
         maxSize={maxSize}
-        updateMeasurement={updateMeasurement}
         onMeasured={onMeasured}
       ></NodeMeasurement>
       <RenderNodes nodeInfos={nodeInfos} onRendered={onRendered}></RenderNodes>
@@ -92,28 +85,27 @@ function getMasterGraph(graphComponent: GraphComponent): IGraph {
   return graph instanceof FilteredGraphWrapper ? graph.wrappedGraph! : graph
 }
 
-function NodeMeasurement<TDataItem>({
+function NodeMeasurement<TDataItem extends SizedDataItem>({
   nodeData,
   nodeSize,
   maxSize,
-  onMeasured,
-  updateMeasurement
+  onMeasured
 }: NodeMeasurementProps<TDataItem>) {
   const graphComponent = useGraphComponent()!
 
   const [measureElements, setMeasureElements] = useState<ReactNode[]>([])
-  const [measured, setMeasured] = useState<boolean>(false)
 
   const measureParent = useRef<HTMLDivElement>(null)
   const myRef = useRef<NodeTemplateRef[]>([])
 
-  useEffect(() => {
-    setMeasured(false)
-  }, [nodeData])
+  useLayoutEffect(() => {
+    const shouldMeasure = !nodeSize && nodeData.some(item => !('width' in item && 'height' in item))
 
-  useEffect(() => {
-    setMeasured(false)
-    myRef.current = []
+    if (!shouldMeasure) {
+      onMeasured?.()
+      return
+    }
+
     if (!nodeSize) {
       const graph = getMasterGraph(graphComponent)
       const elements: ReactNode[] = []
@@ -152,10 +144,14 @@ function NodeMeasurement<TDataItem>({
       }
       setMeasureElements(elements)
     }
-  }, [graphComponent, nodeData, updateMeasurement])
+
+    return () => {
+      myRef.current = []
+    }
+  }, [graphComponent, nodeData, nodeSize])
 
   useLayoutEffect(() => {
-    if (!measured && measureParent.current) {
+    if (measureElements.length > 0) {
       for (const { ref, node } of myRef.current) {
         if (node && ref.current) {
           // get the size of the template and assign its size to the node (only if the node has no specific size stored in its data)
@@ -174,14 +170,14 @@ function NodeMeasurement<TDataItem>({
           }
         }
       }
-      setMeasured(true)
+
       onMeasured && onMeasured()
     }
-  }, [measured, measureParent.current])
+  }, [measureElements])
 
   return (
     <>
-      {!measured && (
+      {measureElements.length > 0 && (
         <div className="yfiles-react-measure-container" ref={measureParent}>
           {measureElements}
         </div>

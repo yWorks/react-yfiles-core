@@ -137,6 +137,12 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
     )
   }
 
+  if (!region) {
+    // Workaround for bounds provider only providing the node layout as bounds
+    // but ignoring the drop shadow.
+    targetRect = targetRect.getEnlarged(margins)
+  }
+
   let rows: number
   let columns: number
   let tiles: Point[][][]
@@ -221,24 +227,33 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
         cssStyleSheet: null,
         zoom: exportComponent.zoom
       })
-      configureMargin(exporter, i === 0, lastRow, k === 0, lastColumn, margins, tiledPrinting)
-
-      if (!lastRow || !lastColumn) {
-        resultingHTML += "<div class='pagebreak'>"
-      } else {
-        resultingHTML += '<div>'
-      }
+      configureMargin(
+        exporter,
+        i === 0,
+        lastRow,
+        k === 0,
+        lastColumn,
+        margins,
+        tiledPrinting,
+        !!region
+      )
 
       // export the svg to an XML string
       const svgElement = await exporter.exportSvgAsync(exportComponent)
 
       setTimeout(() => {
+        if (!lastRow || !lastColumn) {
+          resultingHTML += "<div class='pagebreak'>"
+        } else {
+          resultingHTML += '<div>'
+        }
+
         // collect all stylesheets - dom has to be ready to get them
         attachStyleSheets(svgElement, graphComponent.div)
-        resultingHTML += SvgExport.exportSvgString(svgElement)
-      }, 0) //todo check if there is a better way to remove this
 
-      resultingHTML += '</div>'
+        resultingHTML += SvgExport.exportSvgString(svgElement)
+        resultingHTML += '</div>'
+      }, 0) //todo check if there is a better way to remove this
     }
   }
 
@@ -286,8 +301,14 @@ function configureMargin(
   firstColumn: boolean,
   lastColumn: boolean,
   margins: { top: number; bottom: number; left: number; right: number },
-  tiledPrinting: boolean
+  tiledPrinting: boolean,
+  isRegionPrint: boolean
 ): void {
+  if (!isRegionPrint) {
+    // Workaround for bounds provider only providing the node layout as bounds:
+    // The margin for full print has already been added to the targetRect above.
+    return
+  }
   if (!tiledPrinting) {
     // set margin if we don't print tiles
     exporter.margins = margins
