@@ -171,7 +171,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
         }
       }
 
-      measureParent.current!.innerHTML = ''
+      setMeasureElements([])
       onMeasured && onMeasured()
     }
   }, [measureElements])
