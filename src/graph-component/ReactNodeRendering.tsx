@@ -133,7 +133,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
               ref={nodeTemplateRef.ref}
               data-id={node.tag.id}
               key={index}
-              style={{ position: 'absolute' }}
+              style={{ position: 'fixed' }}
             >
               {nodeElement}
             </div>
@@ -171,6 +171,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
         }
       }
 
+      setMeasureElements([])
       onMeasured && onMeasured()
     }
   }, [measureElements])
@@ -178,7 +179,17 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
   return (
     <>
       {measureElements.length > 0 && (
-        <div className="yfiles-react-measure-container" ref={measureParent}>
+        <div
+          className="yfiles-react-measure-container"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: -1,
+            visibility: 'hidden'
+          }}
+          ref={measureParent}
+        >
           {measureElements}
         </div>
       )}
