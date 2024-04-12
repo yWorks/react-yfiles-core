@@ -113,11 +113,6 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
       for (const node of graph.nodes) {
         if (!(node.tag.width && node.tag.height)) {
           const style = node.style
-          const nodeTemplateRef = {
-            node,
-            ref: createRef<HTMLDivElement>()
-          }
-          myRef.current.push(nodeTemplateRef)
           let nodeElement
           if (style instanceof ReactComponentHtmlNodeStyle) {
             nodeElement = createElement(style.component, getMeasureNodeProps(node))
@@ -127,7 +122,14 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
               ...getMeasureNodeProps(node),
               isFolderNode: foldingView ? !foldingView.isExpanded(node) : false
             } as RenderGroupNodeProps<any>)
+          } else {
+            continue
           }
+          const nodeTemplateRef = {
+            node,
+            ref: createRef<HTMLDivElement>()
+          }
+          myRef.current.push(nodeTemplateRef)
           const element = (
             <div
               ref={nodeTemplateRef.ref}
