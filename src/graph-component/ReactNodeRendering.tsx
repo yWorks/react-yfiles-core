@@ -52,6 +52,7 @@ type NodeMeasurementProps<TDataItem extends SizedDataItem> = {
 type RenderNodesProps<TDataItem> = {
   nodeInfos: NodeRenderInfo<TDataItem>[]
   onRendered?: () => void
+  extraProps?: Record<string, any>
 }
 
 export type ReactNodeRenderingProps<TDataItem extends SizedDataItem> =
@@ -65,7 +66,8 @@ export function ReactNodeRendering<TDataItem extends SizedDataItem>({
   nodeSize,
   maxSize,
   onMeasured,
-  onRendered
+  onRendered,
+  extraProps
 }: ReactNodeRenderingProps<TDataItem>) {
   return (
     <>
@@ -75,7 +77,11 @@ export function ReactNodeRendering<TDataItem extends SizedDataItem>({
         maxSize={maxSize}
         onMeasured={onMeasured}
       ></NodeMeasurement>
-      <RenderNodes nodeInfos={nodeInfos} onRendered={onRendered}></RenderNodes>
+      <RenderNodes
+        nodeInfos={nodeInfos}
+        onRendered={onRendered}
+        extraProps={extraProps}
+      ></RenderNodes>
     </>
   )
 }
@@ -199,7 +205,11 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
   )
 }
 
-function RenderNodes<TDataItem>({ nodeInfos, onRendered }: RenderNodesProps<TDataItem>) {
+function RenderNodes<TDataItem>({
+  nodeInfos,
+  onRendered,
+  extraProps
+}: RenderNodesProps<TDataItem>) {
   useEffect(() => {
     onRendered?.()
   })
@@ -208,11 +218,14 @@ function RenderNodes<TDataItem>({ nodeInfos, onRendered }: RenderNodesProps<TDat
     () =>
       nodeInfos.map(nodeInfo =>
         createPortal(
-          createElement<RenderNodeProps<TDataItem>>(nodeInfo.component, nodeInfo.props),
+          createElement<RenderNodeProps<TDataItem>>(nodeInfo.component, {
+            ...nodeInfo.props,
+            ...extraProps
+          }),
           nodeInfo.domNode
         )
       ),
-    [nodeInfos]
+    [nodeInfos, extraProps]
   )
 
   return <>{nodes}</>
