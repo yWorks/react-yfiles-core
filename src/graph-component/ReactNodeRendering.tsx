@@ -100,6 +100,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
   const graphComponent = useGraphComponent()!
 
   const [measureElements, setMeasureElements] = useState<ReactNode[]>([])
+  const [nonReactNodes, setNonReactNodes] = useState<boolean>(false)
 
   const measureParent = useRef<HTMLDivElement>(null)
   const myRef = useRef<NodeTemplateRef[]>([])
@@ -129,6 +130,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
               isFolderNode: foldingView ? !foldingView.isExpanded(node) : false
             } as RenderGroupNodeProps<any>)
           } else {
+            setNonReactNodes(true)
             continue
           }
           const nodeTemplateRef = {
@@ -159,7 +161,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
   }, [graphComponent, nodeData, nodeSize])
 
   useLayoutEffect(() => {
-    if (measureElements.length > 0) {
+    if (measureElements.length > 0 || nonReactNodes) {
       for (const { ref, node } of myRef.current) {
         if (node && ref.current) {
           // get the size of the template and assign its size to the node (only if the node has no specific size stored in its data)
@@ -180,9 +182,10 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
       }
 
       setMeasureElements([])
+      setNonReactNodes(false)
       onMeasured && onMeasured()
     }
-  }, [measureElements])
+  }, [measureElements, nonReactNodes])
 
   return (
     <>
