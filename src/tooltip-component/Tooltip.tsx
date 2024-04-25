@@ -50,8 +50,8 @@ export function Tooltip<TDataItem>({ renderTooltip }: TooltipProps<TDataItem>) {
   useEffect(() => {
     const inputMode = graphComponent.inputMode as GraphInputMode
 
-    // show tooltips only for nodes, edges and labels
-    inputMode.toolTipItems = GraphItemTypes.NODE | GraphItemTypes.EDGE | GraphItemTypes.LABEL
+    // show tooltips only for nodes and edges
+    inputMode.toolTipItems = GraphItemTypes.NODE | GraphItemTypes.EDGE
 
     // Customize the tooltip's behavior to our liking.
     const mouseHoverInputMode = inputMode.mouseHoverInputMode
