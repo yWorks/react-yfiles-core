@@ -74,6 +74,10 @@ export interface ContextMenuProps<TDataItem> {
    * An optional component used for rendering a custom context menu.
    */
   renderMenu?: ComponentType<RenderContextMenuProps<TDataItem>>
+  /**
+   * Optional global props that get passed to the context-menu component
+   */
+  extraProps?: Record<string, any>
 }
 
 /**
@@ -82,7 +86,8 @@ export interface ContextMenuProps<TDataItem> {
  */
 export function ContextMenu<TDataItem>({
   menuItems,
-  renderMenu
+  renderMenu,
+  extraProps
 }: ContextMenuProps<TDataItem> & PropsWithChildren) {
   const [menuVisible, setMenuVisible] = useState(false)
   const [menuLocation, setMenuLocation] = useState({ x: 0, y: 0 })
@@ -201,6 +206,7 @@ export function ContextMenu<TDataItem>({
             setMenuVisible(false)
           }}
           renderMenu={renderMenu}
+          extraProps={extraProps}
         ></ContextMenuCore>
       )}
     </>
@@ -215,7 +221,8 @@ function ContextMenuCore<TDataItem>({
   menuItems,
   menuLocation,
   onClose,
-  renderMenu = DefaultRenderMenu
+  renderMenu = DefaultRenderMenu,
+  extraProps
 }: ContextMenuProps<TDataItem> & {
   dataItem: TDataItem | null
   onClose: Function
@@ -224,7 +231,8 @@ function ContextMenuCore<TDataItem>({
   const menu = createElement(renderMenu, {
     menuItems: menuItems ? menuItems(dataItem) : [],
     item: dataItem,
-    onClose: onClose
+    onClose: onClose,
+    ...extraProps
   })
   return (
     menu && (

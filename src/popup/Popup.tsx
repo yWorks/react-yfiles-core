@@ -72,6 +72,11 @@ export interface PopupProps<TDataItem> {
    * The default is single-click.
    */
   clickMode?: 'single' | 'double'
+
+  /**
+   * Optional global props that get passed to the popup component
+   */
+  extraProps?: Record<string, any>
 }
 
 /**
@@ -81,7 +86,8 @@ export interface PopupProps<TDataItem> {
 export function Popup<TDataItem>({
   renderPopup,
   position,
-  clickMode
+  clickMode,
+  extraProps
 }: PopupProps<TDataItem> & PropsWithChildren) {
   const graphComponent = useGraphComponent()!
   const [location, setLocation] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -153,7 +159,8 @@ export function Popup<TDataItem>({
         item: currentItem?.tag,
         onClose: () => {
           setCurrentItem(null)
-        }
+        },
+        ...extraProps
       })
     : null
   return (
