@@ -34,13 +34,14 @@ export interface RenderTooltipProps<TDataItem> {
  */
 export interface TooltipProps<TDataItem> {
   renderTooltip?: ComponentType<RenderTooltipProps<TDataItem>>
+  extraProps?: Record<string, any>
 }
 
 /**
  * The Tooltip component adds an item tooltip to its parent component. It is designed to be used inside a
  * parent component that displays the graph.
  */
-export function Tooltip<TDataItem>({ renderTooltip }: TooltipProps<TDataItem>) {
+export function Tooltip<TDataItem>({ renderTooltip, extraProps }: TooltipProps<TDataItem>) {
   const graphComponent = useGraphComponent()!
 
   const [tooltipRenderInfo, setTooltipRenderInfo] = useState<TooltipRenderInfo<TDataItem> | null>(
@@ -89,10 +90,10 @@ export function Tooltip<TDataItem>({ renderTooltip }: TooltipProps<TDataItem>) {
           createElement(
             TooltipWrapper,
             {},
-            createElement<RenderTooltipProps<TDataItem>>(
-              tooltipRenderInfo.component,
-              tooltipRenderInfo.props
-            )
+            createElement<RenderTooltipProps<TDataItem>>(tooltipRenderInfo.component, {
+              ...tooltipRenderInfo.props,
+              ...extraProps
+            })
           ),
           tooltipRenderInfo.domNode
         )}
