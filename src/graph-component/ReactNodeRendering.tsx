@@ -47,6 +47,7 @@ type NodeMeasurementProps<TDataItem extends SizedDataItem> = {
   nodeSize?: { width: number; height: number }
   maxSize?: { width: number; height: number }
   onMeasured?: () => void
+  measureTrigger?: boolean
 }
 
 type RenderNodesProps<TDataItem> = {
@@ -67,7 +68,8 @@ export function ReactNodeRendering<TDataItem extends SizedDataItem>({
   maxSize,
   onMeasured,
   onRendered,
-  extraProps
+  extraProps,
+  measureTrigger
 }: ReactNodeRenderingProps<TDataItem>) {
   return (
     <>
@@ -76,6 +78,7 @@ export function ReactNodeRendering<TDataItem extends SizedDataItem>({
         nodeSize={nodeSize}
         maxSize={maxSize}
         onMeasured={onMeasured}
+        measureTrigger={measureTrigger}
       ></NodeMeasurement>
       <RenderNodes
         nodeInfos={nodeInfos}
@@ -95,7 +98,8 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
   nodeData,
   nodeSize,
   maxSize,
-  onMeasured
+  onMeasured,
+  measureTrigger
 }: NodeMeasurementProps<TDataItem>) {
   const graphComponent = useGraphComponent()!
 
@@ -158,7 +162,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
     return () => {
       myRef.current = []
     }
-  }, [graphComponent, nodeData, nodeSize])
+  }, [graphComponent, nodeData, nodeSize, measureTrigger])
 
   useLayoutEffect(() => {
     if (measureElements.length > 0 || nonReactNodes) {
