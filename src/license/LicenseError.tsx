@@ -1,6 +1,11 @@
 import './LicenseError.css'
 
-export function LicenseError() {
+export interface LicenseErrorProps {
+  componentName: string
+  codeSample: string
+}
+
+export function LicenseError(props: LicenseErrorProps) {
   return (
     <>
       <div className="yfiles-react-license-error">
@@ -8,7 +13,7 @@ export function LicenseError() {
           <div className="yfiles-react-license-error-dialog__title">Invalid / Missing License</div>
           <div className="yfiles-react-license-error-dialog__content">
             <div className="yfiles-react-license-error-dialog__paragraph">
-              The <em>yFiles React Organization Chart Component</em> requires a valid{' '}
+              The <em>{props.componentName}</em> requires a valid{' '}
               <a href="https://www.yworks.com/products/yfiles-for-html">yFiles for HTML</a> license.
             </div>
             <div className="yfiles-react-license-error-dialog__paragraph">
@@ -17,27 +22,12 @@ export function LicenseError() {
             </div>
 
             <div className="yfiles-react-license-error-dialog__paragraph">
-              Add the <code>license.json</code> to your React application and register it like this:
+              Add the <code>license.json</code> to your React application and register it before
+              using the component.
             </div>
 
             <div className="yfiles-react-license-error-dialog__code-snippet">
-              <pre>
-                {`import {OrgChart, registerLicense} from '@yworks/react-yfiles-orgchart' 
-import '@yworks/react-yfiles-orgchart/dist/index.css'
-import yFilesLicense from './license.json'
-
-function App() {
-  registerLicense(yFilesLicense)
-            
-  const data = [
-    {id: 0, name: 'Eric Joplin', subordinates: [1, 2]},
-    {id: 1, name: 'Amy Kain'},
-    {id: 2, name: 'David Kerry'}
-  ]
-
-  return <OrgChart data={data}></OrgChart>
-}`}
-              </pre>
+              <pre>{props.codeSample}</pre>
             </div>
           </div>
         </div>
