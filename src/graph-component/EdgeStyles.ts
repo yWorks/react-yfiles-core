@@ -17,6 +17,10 @@ export interface EdgeStyle {
    */
   smoothingLength?: number
   /**
+   * The source arrow type.
+   */
+  sourceArrow?: Arrow
+  /**
    * The target arrow type.
    */
   targetArrow?: Arrow
@@ -47,7 +51,7 @@ export function convertToPolylineEdgeStyle(style: EdgeStyle) {
       thickness: style.thickness ?? 1
     }),
     cssClass: style.className ?? '',
-    sourceArrow: IArrow.NONE,
+    sourceArrow: convertArrow(style, true),
     targetArrow: convertArrow(style)
   })
 }
@@ -55,8 +59,8 @@ export function convertToPolylineEdgeStyle(style: EdgeStyle) {
 /**
  * Converts the input style arrow to a yFiles PolylineEdgeStyle.
  */
-function convertArrow(style: EdgeStyle): IArrow {
-  const arrow = style.targetArrow
+function convertArrow(style: EdgeStyle, isSource = false): IArrow {
+  const arrow = isSource ? style.sourceArrow : style.targetArrow
   if (!arrow) {
     return IArrow.NONE
   }
