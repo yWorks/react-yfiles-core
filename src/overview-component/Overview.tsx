@@ -30,11 +30,11 @@ export interface OverviewProps {
  * This component has to be used inside a parent component that displays the graph, or its corresponding provider.
  *
  * ```tsx
- * function OrganizationChart() {
+ * function App() {
  *   return (
- *     <OrgChart data={data}>
+ *     <MyReactYFilesComponent data={data}>
  *       <Overview></Overview>
- *     </OrgChart>
+ *     </MyReactYFilesComponent>
  *   )
  * }
  * ```

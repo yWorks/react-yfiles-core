@@ -87,13 +87,13 @@ export interface ControlsProps {
  * This component must be used inside a parent component that displays the graph, or its corresponding provider.
  *
  * ```tsx
- * function OrganizationChart() {
+ * function App() {
  *   const button1 = { action: () => alert('Button 1 clicked!'), icon: <div>Button 1</div> }
  *   const button2 = { action: () => alert('Button 2 clicked!'), icon: <div>Button 2</div> }
  *   return (
- *     <OrgChart data={data}>
+ *     <MyReactYFilesComponent data={data}>
  *       <Controls buttons={() => [button1, button2]}></Controls>
- *     </OrgChart>
+ *     </MyReactYFilesComponent>
  *   )
  * }
  * ```

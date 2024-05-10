@@ -10,7 +10,7 @@ import { setWebWorkerLicense } from '../utils/WebworkerSupport.ts'
  *   registerLicense(yFilesLicense)
  *
  *   return (
- *     <OrgChart data={data}></OrgChart>
+ *     <MyReactYFilesComponent data={data}></MyReactYFilesComponent>
  *   )
  * }
  * ```
