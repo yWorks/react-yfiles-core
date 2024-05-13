@@ -92,18 +92,13 @@ export function Popup<TDataItem>({
   const graphComponent = useGraphComponent()!
   const [location, setLocation] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [currentItem, setCurrentItem] = useState<IModelItem | null>(null)
+  const [visibility, setVisibility] = useState(false)
   const popupContainerRef = useRef<HTMLDivElement>(null)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // needed to run the updateLocation twice the first time that the popup appears to make sure
-    // that the content is already in the dom, and it has the correct width and height
-    setMounted(!!currentItem)
-  }, [currentItem])
-
-  useEffect(() => {
+    setVisibility(false)
     updateLocation(graphComponent, currentItem, popupContainerRef, position)
-  }, [currentItem, graphComponent, mounted, position])
+  }, [currentItem, graphComponent, position])
 
   /**
    * Registers the popup listeners.
@@ -116,6 +111,11 @@ export function Popup<TDataItem>({
       setCurrentItem(null)
     }
     inputMode.addCanvasClickedListener(canvasClickedListener)
+
+    const viewportChangedListener = () => {
+      updateLocation(graphComponent, graphComponent.currentItem, popupContainerRef, position)
+    }
+    graphComponent.addViewportChangedListener(viewportChangedListener)
 
     const itemClickedListener = (_: GraphInputMode, evt: ItemClickedEventArgs<IModelItem>) => {
       setCurrentItem(evt.item instanceof INode || evt.item instanceof IEdge ? evt.item : null)
@@ -139,6 +139,7 @@ export function Popup<TDataItem>({
     return () => {
       // clean up
       inputMode.removeCanvasClickedListener(canvasClickedListener)
+      graphComponent.removeViewportChangedListener(viewportChangedListener)
 
       switch (clickMode) {
         case 'double':
@@ -171,7 +172,8 @@ export function Popup<TDataItem>({
           style={{
             position: 'absolute',
             left: location.x,
-            top: location.y
+            top: location.y,
+            visibility: visibility ? 'visible' : 'hidden'
           }}
           ref={popupContainerRef}
         >
@@ -218,6 +220,7 @@ export function Popup<TDataItem>({
         new Point(newLayout.anchorX, newLayout.anchorY - (height + 10) / zoom)
       )
       setLocation(location)
+      setVisibility(true)
     }
   }
 }

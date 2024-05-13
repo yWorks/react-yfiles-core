@@ -1,5 +1,6 @@
 import { DefaultGraph, License } from 'yfiles'
 import { setWebWorkerLicense } from '../utils/WebworkerSupport.ts'
+import { isProd } from '../utils/DevMode.ts'
 
 /**
  * Registers the [yFiles license]{@link http://docs.yworks.com/yfileshtml/#/dguide/licensing} which is needed to
@@ -10,7 +11,7 @@ import { setWebWorkerLicense } from '../utils/WebworkerSupport.ts'
  *   registerLicense(yFilesLicense)
  *
  *   return (
- *     <OrgChart data={data}></OrgChart>
+ *     <MyReactYFilesComponent data={data}></MyReactYFilesComponent>
  *   )
  * }
  * ```
@@ -26,7 +27,11 @@ export function registerLicense(licenseKey: Record<string, unknown>) {
  * Checks whether there is a valid yfiles license registered.
  */
 export function checkLicense(): boolean {
-  const g = new DefaultGraph()
-  g.createNode()
-  return g.nodes.size === 1
+  if (!isProd) {
+    const g = new DefaultGraph()
+    g.createNode()
+    return g.nodes.size === 1
+  }
+
+  return true
 }
