@@ -25,3 +25,4 @@ export {
   type ExportSettings
 } from './utils/ExportSupport.ts'
 export { registerWebWorker } from './utils/WebworkerSupport.ts'
+export * from './utils/CheckStylesheetLoaded.ts'
