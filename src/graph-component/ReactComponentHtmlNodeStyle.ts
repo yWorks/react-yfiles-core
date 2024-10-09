@@ -1,4 +1,11 @@
-import type { GraphComponent, GraphInputMode, INode, IRenderContext, TypedHtmlVisual } from 'yfiles'
+import type {
+  GraphComponent,
+  GraphInputMode,
+  INode,
+  IRenderContext,
+  TypedHtmlVisual,
+  Visual
+} from 'yfiles'
 import { HtmlVisual, NodeStyleBase } from 'yfiles'
 import { ComponentType, Dispatch, memo, SetStateAction } from 'react'
 
@@ -25,6 +32,7 @@ export type NodeRenderInfo<TDataItem> = {
   component: NodeTemplate<TDataItem>
   props: RenderNodeProps<TDataItem>
   node: INode
+  visual: Visual
 }
 
 /**
@@ -128,16 +136,16 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
     // create a React root and render the component into
     const div = document.createElement('div')
 
+    // wrap the Dom element into a HtmlVisual, adding the "root" for later use in updateVisual
+    const visual = HtmlVisual.from(div)
+
     this.setNodeInfos &&
       this.setNodeInfos(nodeInfos => {
-        const info = { domNode: div, props, component: this.component, node }
-        const newInfos = nodeInfos.filter(info => info.node !== node)
+        const info = { domNode: div, props, component: this.component, node, visual }
+        const newInfos = nodeInfos.filter(info => info.visual !== visual)
         newInfos.push(info)
         return newInfos
       })
-
-    // wrap the Dom element into a HtmlVisual, adding the "root" for later use in updateVisual
-    const visual = HtmlVisual.from(div)
 
     // set the CSS layout for the container
     HtmlVisual.setLayout(visual.element, node.layout)
@@ -146,7 +154,7 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
     context.setDisposeCallback(visual, () => {
       this.setNodeInfos &&
         this.setNodeInfos(nodeInfos => {
-          return nodeInfos.filter(info => info.node !== node)
+          return nodeInfos.filter(info => info.visual !== visual)
         })
       return null
     })
@@ -163,7 +171,7 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
 
     this.setNodeInfos &&
       this.setNodeInfos(nodeInfos => {
-        const oldInfo = nodeInfos.find(info => info.node === node)
+        const oldInfo = nodeInfos.find(info => info.visual === oldVisual)
         if (!oldInfo) {
           return nodeInfos
         }
@@ -174,6 +182,7 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
             domNode: oldVisual.element,
             props: this.createProps(context, node, true),
             component: this.component,
+            visual: oldVisual,
             node
           }
           const newInfos = nodeInfos.filter(info => info !== oldInfo)
