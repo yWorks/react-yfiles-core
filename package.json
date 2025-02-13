@@ -33,7 +33,7 @@
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18",
-    "yfiles": ">=26"
+    "@yfiles/yfiles": ">=30"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

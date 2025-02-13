@@ -10,8 +10,8 @@ import {
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import {
   EdgePathLabelModel,
-  ExteriorLabelModel,
-  ExteriorLabelModelPosition,
+  ExteriorNodeLabelModel,
+  ExteriorNodeLabelModelPosition,
   GraphComponent,
   GraphInputMode,
   GraphItemTypes,
@@ -20,11 +20,12 @@ import {
   IModelItem,
   INode,
   ItemClickedEventArgs,
-  ItemTappedEventArgs,
   Point,
+  PointerButtons,
+  PointerType,
   SimpleLabel,
   Size
-} from 'yfiles'
+} from '@yfiles/yfiles'
 import { DefaultRenderPopup } from './DefaultRenderPopup.tsx'
 
 import './Popup.css'
@@ -51,14 +52,14 @@ export interface PopupProps<TDataItem> {
    * The position of the popup.
    */
   position?:
-    | 'east'
-    | 'north'
-    | 'north-east'
-    | 'north-west'
-    | 'south'
-    | 'south-east'
-    | 'south-west'
-    | 'west'
+    | 'right'
+    | 'top'
+    | 'top-right'
+    | 'top-left'
+    | 'bottom'
+    | 'bottom-right'
+    | 'bottom-left'
+    | 'left'
   /**
    * An optional custom that renders a custom popup.
    */
@@ -110,46 +111,45 @@ export function Popup<TDataItem>({
     const canvasClickedListener = () => {
       setCurrentItem(null)
     }
-    inputMode.addCanvasClickedListener(canvasClickedListener)
+    inputMode.addEventListener('canvas-clicked', canvasClickedListener)
 
     const viewportChangedListener = () => {
       updateLocation(graphComponent, graphComponent.currentItem, popupContainerRef, position)
     }
-    graphComponent.addViewportChangedListener(viewportChangedListener)
+    graphComponent.addEventListener('viewport-changed', viewportChangedListener)
 
-    const itemClickedListener = (_: GraphInputMode, evt: ItemClickedEventArgs<IModelItem>) => {
-      setCurrentItem(evt.item instanceof INode || evt.item instanceof IEdge ? evt.item : null)
-    }
-    const itemTappedListener = (_: GraphInputMode, evt: ItemTappedEventArgs<IModelItem>) => {
-      setCurrentItem(evt.item instanceof INode || evt.item instanceof IEdge ? evt.item : null)
+    const itemClickedListener = (evt: ItemClickedEventArgs<IModelItem>) => {
+      if (
+        evt.pointerType === PointerType.TOUCH ||
+        (evt.pointerButtons & PointerButtons.MOUSE_LEFT) === PointerButtons.MOUSE_LEFT ||
+        (evt.pointerButtons & PointerButtons.PEN_CONTACT) === PointerButtons.PEN_CONTACT
+      ) {
+        setCurrentItem(evt.item instanceof INode || evt.item instanceof IEdge ? evt.item : null)
+      }
     }
 
     switch (clickMode) {
       case 'double':
-        inputMode.addItemLeftDoubleClickedListener(itemClickedListener)
-        inputMode.addItemDoubleTappedListener(itemTappedListener)
+        inputMode.addEventListener('item-double-clicked', itemClickedListener)
         break
       case 'single':
       default:
-        inputMode.addItemLeftClickedListener(itemClickedListener)
-        inputMode.addItemTappedListener(itemTappedListener)
+        inputMode.addEventListener('item-clicked', itemClickedListener)
         break
     }
 
     return () => {
       // clean up
-      inputMode.removeCanvasClickedListener(canvasClickedListener)
-      graphComponent.removeViewportChangedListener(viewportChangedListener)
+      inputMode.removeEventListener('canvas-clicked', canvasClickedListener)
+      graphComponent.removeEventListener('viewport-changed', viewportChangedListener)
 
       switch (clickMode) {
         case 'double':
-          inputMode.removeItemLeftDoubleClickedListener(itemClickedListener)
-          inputMode.removeItemDoubleTappedListener(itemTappedListener)
+          inputMode.removeEventListener('item-double-clicked', itemClickedListener)
           break
         case 'single':
         default:
-          inputMode.removeItemLeftClickedListener(itemClickedListener)
-          inputMode.removeItemTappedListener(itemTappedListener)
+          inputMode.removeEventListener('item-clicked', itemClickedListener)
           break
       }
     }
@@ -191,14 +191,14 @@ export function Popup<TDataItem>({
     item: IModelItem | null,
     popupContainer: RefObject<HTMLDivElement>,
     position?:
-      | 'east'
-      | 'north'
-      | 'north-east'
-      | 'north-west'
-      | 'south'
-      | 'south-east'
-      | 'south-west'
-      | 'west'
+      | 'right'
+      | 'top'
+      | 'top-right'
+      | 'top-left'
+      | 'bottom'
+      | 'bottom-right'
+      | 'bottom-left'
+      | 'left'
   ) {
     if (!popupContainer.current || !item) {
       return
@@ -208,15 +208,15 @@ export function Popup<TDataItem>({
     const labelModelPosition = convertToLabelModelParameter(position)
     const labelModelParameter =
       item instanceof INode
-        ? new ExteriorLabelModel().createParameter(labelModelPosition)
-        : new EdgePathLabelModel({ autoRotation: false }).createDefaultParameter()
+        ? new ExteriorNodeLabelModel().createParameter(labelModelPosition)
+        : new EdgePathLabelModel({ autoRotation: false }).createRatioParameter()
     const dummyLabel = new SimpleLabel(item as unknown as ILabelOwner, '', labelModelParameter)
 
     const zoom = graphComponent.zoom
-    if (labelModelParameter.supports(dummyLabel) && width >= 0 && height >= 0) {
+    if (width >= 0 && height >= 0) {
       dummyLabel.preferredSize = new Size(width / zoom, height / zoom)
       const newLayout = labelModelParameter.model.getGeometry(dummyLabel, labelModelParameter)
-      const location = graphComponent.toViewCoordinates(
+      const location = graphComponent.worldToViewCoordinates(
         new Point(newLayout.anchorX, newLayout.anchorY - (height + 10) / zoom)
       )
       setLocation(location)
@@ -230,32 +230,32 @@ export function Popup<TDataItem>({
  */
 function convertToLabelModelParameter(
   position?:
-    | 'east'
-    | 'north'
-    | 'north-east'
-    | 'north-west'
-    | 'south'
-    | 'south-east'
-    | 'south-west'
-    | 'west'
+    | 'right'
+    | 'top'
+    | 'top-right'
+    | 'top-left'
+    | 'bottom'
+    | 'bottom-right'
+    | 'bottom-left'
+    | 'left'
 ) {
   switch (position) {
     default:
-    case 'north':
-      return ExteriorLabelModelPosition.NORTH
-    case 'east':
-      return ExteriorLabelModelPosition.EAST
-    case 'west':
-      return ExteriorLabelModelPosition.WEST
-    case 'south':
-      return ExteriorLabelModelPosition.SOUTH
-    case 'north-east':
-      return ExteriorLabelModelPosition.NORTH_EAST
-    case 'north-west':
-      return ExteriorLabelModelPosition.NORTH_WEST
-    case 'south-east':
-      return ExteriorLabelModelPosition.SOUTH_EAST
-    case 'south-west':
-      return ExteriorLabelModelPosition.WEST
+    case 'top':
+      return ExteriorNodeLabelModelPosition.TOP
+    case 'right':
+      return ExteriorNodeLabelModelPosition.RIGHT
+    case 'left':
+      return ExteriorNodeLabelModelPosition.LEFT
+    case 'bottom':
+      return ExteriorNodeLabelModelPosition.BOTTOM
+    case 'top-right':
+      return ExteriorNodeLabelModelPosition.TOP_RIGHT
+    case 'top-left':
+      return ExteriorNodeLabelModelPosition.TOP_LEFT
+    case 'bottom-right':
+      return ExteriorNodeLabelModelPosition.BOTTOM_RIGHT
+    case 'bottom-left':
+      return ExteriorNodeLabelModelPosition.BOTTOM_LEFT
   }
 }

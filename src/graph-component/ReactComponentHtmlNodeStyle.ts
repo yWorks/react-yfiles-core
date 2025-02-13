@@ -5,8 +5,8 @@ import type {
   IRenderContext,
   TypedHtmlVisual,
   Visual
-} from 'yfiles'
-import { HtmlVisual, NodeStyleBase } from 'yfiles'
+} from '@yfiles/yfiles'
+import { HtmlVisual, NodeStyleBase } from '@yfiles/yfiles'
 import { ComponentType, Dispatch, memo, SetStateAction } from 'react'
 
 /**
@@ -119,7 +119,7 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
     const graphComponent = context.canvasComponent as GraphComponent
     const inputMode = graphComponent.inputMode as GraphInputMode
     return {
-      selected: graphComponent.selection.isSelected(node),
+      selected: graphComponent.selection.includes(node),
       hovered: inputMode?.itemHoverInputMode.currentHoverItem === node,
       focused: graphComponent.currentItem === node,
       width: node.layout.width,

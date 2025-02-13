@@ -1,5 +1,5 @@
 import { GraphSearch } from './GraphSearch'
-import { GraphComponent, INode } from 'yfiles'
+import { GraphComponent, INode } from '@yfiles/yfiles'
 import { useCallback, useEffect, useMemo } from 'react'
 
 export function useGraphSearch<TDataItem, TNeedle>(
@@ -19,11 +19,11 @@ export function useGraphSearch<TDataItem, TNeedle>(
   }, [searchQuery, graphSearch])
 
   useEffect(() => {
-    graphComponent.graph.addNodeCreatedListener(updateSearch)
-    graphComponent.graph.addNodeRemovedListener(updateSearch)
+    graphComponent.graph.addEventListener('node-created', updateSearch)
+    graphComponent.graph.addEventListener('node-removed', updateSearch)
     return () => {
-      graphComponent.graph.removeNodeCreatedListener(updateSearch)
-      graphComponent.graph.removeNodeRemovedListener(updateSearch)
+      graphComponent.graph.removeEventListener('node-created', updateSearch)
+      graphComponent.graph.removeEventListener('node-removed', updateSearch)
     }
   }, [graphComponent, searchQuery, updateSearch])
 

@@ -1,4 +1,13 @@
-import { GraphComponent, IEnumerable, Insets, Matrix, Point, Rect, Size, SvgExport } from 'yfiles'
+import {
+  GraphComponent,
+  IEnumerable,
+  Insets,
+  Matrix,
+  Point,
+  Rect,
+  Size,
+  SvgExport
+} from '@yfiles/yfiles'
 import { attachStyleSheets, createExportGraphComponent } from './ExportSupport'
 import '../styles/fonts.css'
 
@@ -124,11 +133,9 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
     )
   } else {
     targetRect = getBoundsFromPoints(
-      graphComponent
-        .getCanvasObjects(graphComponent.rootGroup)
-        .map(co =>
-          co.descriptor.getBoundsProvider(co.userObject).getBounds(graphComponent.canvasContext)
-        )
+      graphComponent.renderTree
+        .getElements(graphComponent.renderTree.rootGroup)
+        .map(co => co.renderer.getBoundsProvider(co.tag).getBounds(graphComponent.canvasContext))
         .filter(bounds => bounds.isFinite)
         .flatMap(bounds =>
           IEnumerable.from([bounds.topLeft, bounds.topRight, bounds.bottomLeft, bounds.bottomRight])
@@ -249,7 +256,7 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
         }
 
         // collect all stylesheets - dom has to be ready to get them
-        attachStyleSheets(svgElement, graphComponent.div)
+        attachStyleSheets(svgElement, graphComponent.htmlElement)
 
         resultingHTML += SvgExport.exportSvgString(svgElement)
         resultingHTML += '</div>'
@@ -319,6 +326,6 @@ function configureMargin(
     const right = lastColumn ? margins.right : 0
     const left = firstColumn ? margins.left : 0
 
-    exporter.margins = new Insets(left, top, right, bottom)
+    exporter.margins = Insets.from({ top: top, right: right, bottom: bottom, left: left })
   }
 }

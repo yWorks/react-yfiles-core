@@ -1,20 +1,24 @@
-import type { GraphComponent, INode } from 'yfiles'
 import {
   Color,
-  GraphHighlightIndicatorManager,
-  IndicatorNodeStyleDecorator,
-  INodeStyle,
+  GraphComponent,
+  HighlightIndicatorManager,
+  IHighlightRenderer,
+  IModelItem,
+  INode,
   Insets,
+  IObjectRenderer,
+  IObservableCollection,
+  NodeStyleIndicatorRenderer,
   Point,
   Rect,
   ShapeNodeStyle,
   Stroke,
-  StyleDecorationZoomPolicy
-} from 'yfiles'
+  StyleIndicatorZoomPolicy
+} from '@yfiles/yfiles'
 
 export class GraphSearch<TNeedle> {
   graphComponent: GraphComponent
-  searchHighlightIndicatorManager: GraphHighlightIndicatorManager
+  searchHighlightIndicatorManager: SearchHighlightIndicatorManager
   matchingNodes: INode[] = []
 
   /**
@@ -42,7 +46,7 @@ export class GraphSearch<TNeedle> {
       graphSearch.updateAutoCompleteSuggestions(searchBox, autoCompleteSuggestions)
     }
 
-    searchBox.addEventListener('input', e => {
+    searchBox.addEventListener('input', async e => {
       const input = e.target as HTMLInputElement
       const searchText = input.value
       graphSearch.updateSearch(searchText)
@@ -55,16 +59,16 @@ export class GraphSearch<TNeedle> {
       ) {
         // Determine whether we actually selected an element from the list
         if (hasSelectedElementFromDatalist(input, searchText)) {
-          graphSearch.zoomToSearchResult()
+          await graphSearch.zoomToSearchResult()
         }
       }
     })
 
     // adds the listener that will focus to the result of the search
-    searchBox.addEventListener('keypress', e => {
+    searchBox.addEventListener('keydown', async e => {
       if (e.key === 'Enter') {
         e.preventDefault()
-        graphSearch.zoomToSearchResult()
+        await graphSearch.zoomToSearchResult()
       }
     })
 
@@ -85,32 +89,34 @@ export class GraphSearch<TNeedle> {
     this.graphComponent = graphComponent
     // initialize the default highlight style
     const highlightColor = Color.TOMATO
-    this.searchHighlightIndicatorManager = new GraphHighlightIndicatorManager({
-      nodeStyle: new IndicatorNodeStyleDecorator({
-        wrapped: new ShapeNodeStyle({
-          stroke: new Stroke(highlightColor.r, highlightColor.g, highlightColor.b, 220, 3),
-          fill: null
+    this.searchHighlightIndicatorManager = this.searchHighlightIndicatorManager =
+      new SearchHighlightIndicatorManager({
+        nodeRenderer: new NodeStyleIndicatorRenderer({
+          nodeStyle: new ShapeNodeStyle({
+            stroke: new Stroke(highlightColor.r, highlightColor.g, highlightColor.b, 220, 3),
+            fill: null
+          }),
+          margins: 3,
+          zoomPolicy: StyleIndicatorZoomPolicy.MIXED
         }),
-        padding: 3,
-        zoomPolicy: StyleDecorationZoomPolicy.MIXED
+        domain: graphComponent.highlightIndicatorManager.domain
       })
-    })
     this.searchHighlightIndicatorManager.install(graphComponent)
   }
 
   /**
    * Gets the decoration style used for highlighting the matching nodes.
    */
-  get highlightStyle(): INodeStyle | null {
-    return this.searchHighlightIndicatorManager.nodeStyle
+  get highlightRenderer(): IHighlightRenderer {
+    return this.searchHighlightIndicatorManager.nodeRenderer
   }
 
   /**
    * Sets the decoration style used for highlighting the matching nodes.
-   * @param highlightStyle The given highlight style.
+   * @param highlightRenderer The given highlight style.
    */
-  set highlightStyle(highlightStyle: INodeStyle | null) {
-    this.searchHighlightIndicatorManager.nodeStyle = highlightStyle
+  set highlightStyle(highlightRenderer: IHighlightRenderer) {
+    this.searchHighlightIndicatorManager.nodeRenderer = highlightRenderer
   }
 
   /**
@@ -119,17 +125,17 @@ export class GraphSearch<TNeedle> {
    */
   updateSearch(needle?: TNeedle): void {
     // we use the search highlight manager to highlight matching items
-    const manager = this.searchHighlightIndicatorManager
+    const highlights = this.searchHighlightIndicatorManager.items
 
     // first remove previous highlights
-    manager.clearHighlights()
+    highlights.clear()
     this.matchingNodes = []
 
     if (typeof needle === 'string' && needle.trim() !== '') {
       this.graphComponent.graph.nodes
         .filter(node => this.matches(node, needle))
         .forEach(node => {
-          manager.addHighlight(node)
+          highlights.add(node)
           this.matchingNodes.push(node)
         })
     }
@@ -180,7 +186,7 @@ export class GraphSearch<TNeedle> {
     const componentHeight = this.graphComponent.size.height
     const maxPossibleZoom = Math.min(componentWidth / rect.width, componentHeight / rect.height)
     const zoom = Math.min(maxPossibleZoom, 1.5)
-    return this.graphComponent.zoomToAnimated(new Point(rect.centerX, rect.centerY), zoom)
+    return this.graphComponent.zoomToAnimated(zoom, new Point(rect.centerX, rect.centerY))
   }
 
   /**
@@ -209,4 +215,31 @@ function hasSelectedElementFromDatalist(input: HTMLInputElement, searchText: str
     }
   }
   return false
+}
+
+/**
+ * A highlight indicator manager allows setting a specific renderer for the node highlights.
+ */
+class SearchHighlightIndicatorManager extends HighlightIndicatorManager<IModelItem> {
+  public nodeRenderer: IHighlightRenderer
+
+  constructor({
+    nodeRenderer,
+    domain
+  }: {
+    nodeRenderer: IHighlightRenderer
+    domain: IObservableCollection<IModelItem>
+  }) {
+    super()
+
+    this.nodeRenderer = nodeRenderer
+    this.domain = domain
+  }
+
+  protected getRenderer(item: IModelItem): IObjectRenderer<IModelItem> | null {
+    if (item instanceof INode) {
+      return this.nodeRenderer
+    }
+    return super.getRenderer(item)
+  }
 }

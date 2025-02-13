@@ -1,4 +1,4 @@
-import { Arrow as YArrow, ArrowType, IArrow, PolylineEdgeStyle, Stroke } from 'yfiles'
+import { Arrow as YArrow, ArrowType, IArrow, PolylineEdgeStyle, Stroke } from '@yfiles/yfiles'
 
 /**
  * A connection style configuration.
@@ -37,7 +37,17 @@ export interface Arrow {
   /**
    * The shape of the arrow.
    */
-  type?: 'circle' | 'cross' | 'default' | 'diamond' | 'none' | 'short' | 'simple' | 'triangle'
+  type?:
+    | 'ellipse'
+    | 'cross'
+    | 'stealth'
+    | 'diamond'
+    | 'none'
+    | 'open'
+    | 'triangle'
+    | 'deltoid'
+    | 'kite'
+    | 'chevron'
 }
 
 /**
@@ -62,12 +72,12 @@ export function convertToPolylineEdgeStyle(style: EdgeStyle) {
 function convertArrow(style: EdgeStyle, isSource = false): IArrow {
   const arrow = isSource ? style.sourceArrow : style.targetArrow
   if (!arrow) {
-    return IArrow.NONE
+    return new YArrow(ArrowType.NONE)
   }
   const arrowColor = arrow.color ?? (style.className ? 'currentColor' : 'black')
   return new YArrow({
     stroke: `${(style.thickness ?? 1) * 0.5}px ${arrowColor}`,
     fill: arrowColor,
-    type: arrow.type ? ArrowType.from(arrow.type) : 'default'
+    type: arrow.type ?? 'stealth'
   })
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { GraphOverviewComponent } from 'yfiles'
+import { GraphOverviewComponent } from '@yfiles/yfiles'
 import './Overview.css'
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import { combineCssClasses } from '../utils/combine-css-classes.ts'

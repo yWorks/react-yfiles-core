@@ -1,39 +1,9 @@
-/****************************************************************************
- ** @license
- ** This demo file is part of yFiles for HTML 2.6.0.1.
- ** Copyright (c) 2000-2023 by yWorks GmbH, Vor dem Kreuzberg 28,
- ** 72070 Tuebingen, Germany. All rights reserved.
- **
- ** yFiles demo files exhibit yFiles for HTML functionalities. Any redistribution
- ** of demo files in source code or binary form, with or without
- ** modification, is not permitted.
- **
- ** Owners of a valid software license for a yFiles for HTML version that this
- ** demo is shipped with are allowed to use the demo source code as basis
- ** for their own yFiles for HTML powered applications. Use of such programs is
- ** governed by the rights and conditions as set out in the yFiles for HTML
- ** license agreement.
- **
- ** THIS SOFTWARE IS PROVIDED ''AS IS'' AND ANY EXPRESS OR IMPLIED
- ** WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- ** MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
- ** NO EVENT SHALL yWorks BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- ** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- ** TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- ** PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- ** LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- ** NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- ** SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- **
- ***************************************************************************/
 import {
   BaseClass,
   delegate,
   type GraphComponent,
   HandleInputMode,
-  HandlePositions,
-  type ICanvasObject,
-  ICanvasObjectDescriptor,
+  HandlePositions, HandlesRenderer,
   type IHandle,
   IHitTestable,
   type IInputModeContext,
@@ -41,6 +11,7 @@ import {
   type IPoint,
   IPositionHandler,
   type IRenderContext,
+  IRenderTreeElement,
   IVisualCreator,
   MoveInputMode,
   MultiplexingInputMode,
@@ -48,11 +19,10 @@ import {
   ObservableCollection,
   Point,
   Rect,
-  RectangleHandle,
-  RenderModes,
+  RectangleHandle, RenderMode,
   type Size,
   SvgVisual
-} from 'yfiles'
+} from '@yfiles/yfiles'
 import { defaultStyling, type TimeFrameStyle } from './Styling'
 
 type BoundsChangedListener = (bounds: Rect) => void
@@ -63,8 +33,8 @@ type BoundsChangedListener = (bounds: Rect) => void
 export class TimeframeRectangle {
   readonly rect: MutableRectangle = new MutableRectangle(0, 0, 0, 0)
 
-  private readonly visual: RectangleVisual | null = null
-  private canvasObject: ICanvasObject | null = null
+  private readonly visual: RectangleVisual
+  private renderTreeElement: IRenderTreeElement | null = null
 
   private readonly handleInputMode: HandleInputMode
   private readonly moveInputMode: MoveInputMode
@@ -83,36 +53,36 @@ export class TimeframeRectangle {
     const rectangle = this.rect
     this.handleInputMode = new HandleInputMode({
       priority: 0,
-      renderMode: RenderModes.SVG,
+      handlesRenderer: new HandlesRenderer(RenderMode.SVG),
       handles: new ObservableCollection<IHandle>([
-        new RectangleHandle(HandlePositions.EAST, rectangle),
-        new RectangleHandle(HandlePositions.WEST, rectangle)
+        new RectangleHandle(HandlePositions.RIGHT, rectangle),
+        new RectangleHandle(HandlePositions.LEFT, rectangle)
       ])
     })
 
     const onBoundsChanged = this.onBoundsChanged.bind(this)
 
     // add the listeners of dragging events
-    this.handleInputMode.addDragFinishedListener(onBoundsChanged)
-    this.handleInputMode.addDraggingListener(onBoundsChanged)
+    this.handleInputMode.addEventListener('drag-finished', onBoundsChanged)
+    this.handleInputMode.addEventListener('dragging', onBoundsChanged)
 
     // creates the move input mode that manages the movement of the rectangle
     this.positionHandler = new RectanglePositionHandler(rectangle)
     this.moveInputMode = new MoveInputMode({
       hitTestable: IHitTestable.create((context, location) =>
-        rectangle.containsWithEps(location, context.hitTestRadius + 3 / context.zoom)
+        rectangle.contains(location, context.hitTestRadius + 3 / context.zoom)
       ),
       positionHandler: this.positionHandler,
       priority: 1
     })
-    this.moveInputMode.addDragFinishedListener(onBoundsChanged)
-    this.moveInputMode.addDraggingListener(onBoundsChanged)
+    this.moveInputMode.addEventListener('drag-finished', onBoundsChanged)
+    this.moveInputMode.addEventListener('dragging', onBoundsChanged)
 
     this.arm()
   }
 
   setBounds(bounds: Rect, silent = false): void {
-    this.rect.reshape(bounds)
+    this.rect.setShape(bounds)
     if (!silent) {
       this.onBoundsChanged()
     }
@@ -130,7 +100,7 @@ export class TimeframeRectangle {
     return this.positionHandler.limits
   }
 
-  addBoundsChangedListener(listener: BoundsChangedListener): void {
+  setBoundsChangedListener(listener: BoundsChangedListener): void {
     this.boundsChangedListener = delegate.combine(this.boundsChangedListener, listener)
   }
 
@@ -143,9 +113,9 @@ export class TimeframeRectangle {
   }
 
   private arm(): void {
-    this.canvasObject = this.graphComponent.backgroundGroup.addChild(
-      this.visual,
-      ICanvasObjectDescriptor.ALWAYS_DIRTY_INSTANCE
+    this.renderTreeElement = this.graphComponent.renderTree.createElement(
+      this.graphComponent.renderTree.backgroundGroup,
+      this.visual
     )
 
     const inputMode = this.graphComponent.inputMode
@@ -158,8 +128,10 @@ export class TimeframeRectangle {
   }
 
   cleanup(): void {
-    this.canvasObject?.remove()
-    this.canvasObject = null
+    if (this.renderTreeElement) {
+      this.graphComponent.renderTree.remove(this.renderTreeElement)
+      this.renderTreeElement = null
+    }
     const inputMode = this.graphComponent.inputMode as MultiplexingInputMode
     inputMode.remove(this.handleInputMode)
     inputMode.remove(this.moveInputMode)
@@ -271,12 +243,12 @@ class RectanglePositionHandler extends BaseClass(IPositionHandler) {
   }
 
   cancelDrag(context: IInputModeContext, originalLocation: Point): void {
-    this.rectangle.relocate(originalLocation)
+    this.rectangle.setLocation(originalLocation)
   }
 
   private updatePosition(originalLocation: Point, newLocation: Point): void {
     const delta = newLocation.subtract(originalLocation)
-    this.rectangle.relocate(this.limit(this.initialPosition.add(delta)))
+    this.rectangle.setLocation(this.limit(this.initialPosition.add(delta)))
   }
 
   private limit(newLocation: Point): Point {

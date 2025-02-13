@@ -11,7 +11,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { FilteredGraphWrapper, GraphComponent, IGraph, INode, Rect } from 'yfiles'
+import { FilteredGraphWrapper, GraphComponent, IGraph, INode, Rect } from '@yfiles/yfiles'
 import {
   NodeRenderInfo,
   ReactComponentHtmlNodeStyle,

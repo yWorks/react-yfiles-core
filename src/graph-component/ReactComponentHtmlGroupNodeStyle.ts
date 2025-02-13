@@ -1,5 +1,5 @@
 import { ComponentType, Dispatch, SetStateAction } from 'react'
-import type { GraphComponent, INode, IRenderContext } from 'yfiles'
+import type { GraphComponent, INode, IRenderContext } from '@yfiles/yfiles'
 import {
   defaultTagProvider,
   NodeRenderInfo,

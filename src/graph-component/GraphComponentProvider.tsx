@@ -5,7 +5,7 @@ import React, {
   useLayoutEffect,
   useMemo
 } from 'react'
-import { GraphComponent, ScrollBarVisibility } from 'yfiles'
+import { GraphComponent, ScrollBarVisibility } from '@yfiles/yfiles'
 
 const GraphComponentContext = createContext<GraphComponent | null>(null)
 
@@ -34,13 +34,13 @@ export function withGraphComponentProvider<
   return (props: React.ComponentProps<T>) => {
     const graphComponent = useMemo(() => {
       const graphComponent = new GraphComponent()
-      graphComponent.div.style.width = '100%'
-      graphComponent.div.style.height = '100%'
-      graphComponent.div.style.minWidth = '400px'
-      graphComponent.div.style.minHeight = '400px'
+      graphComponent.htmlElement.style.width = '100%'
+      graphComponent.htmlElement.style.height = '100%'
+      graphComponent.htmlElement.style.minWidth = '400px'
+      graphComponent.htmlElement.style.minHeight = '400px'
       // scrollbar styling
-      graphComponent.horizontalScrollBarPolicy = ScrollBarVisibility.AS_NEEDED_DYNAMIC
-      graphComponent.verticalScrollBarPolicy = ScrollBarVisibility.AS_NEEDED_DYNAMIC
+      graphComponent.horizontalScrollBarPolicy = ScrollBarVisibility.AUTO
+      graphComponent.verticalScrollBarPolicy = ScrollBarVisibility.AUTO
       return graphComponent
     }, [])
 
@@ -64,14 +64,14 @@ export function useAddGraphComponent(
     if (parentRef.current) {
       const firstChild = parentRef.current.firstChild
       if (firstChild) {
-        parentRef.current.insertBefore(graphComponent.div, firstChild)
+        parentRef.current.insertBefore(graphComponent.htmlElement, firstChild)
       } else {
-        parentRef.current.appendChild(graphComponent.div)
+        parentRef.current.appendChild(graphComponent.htmlElement)
       }
     }
     return () => {
       if (parentRef.current) {
-        parentRef.current.removeChild(graphComponent.div)
+        parentRef.current.removeChild(graphComponent.htmlElement)
       }
     }
   }, [])

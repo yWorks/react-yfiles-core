@@ -26,7 +26,7 @@
  ** SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **
  ***************************************************************************/
-import type { INode } from 'yfiles'
+import type { INode } from '@yfiles/yfiles'
 import type { LabeledTimeInterval, TimeRange } from './TimelineEngine'
 
 type GroupBucket<TDataItem> = {

@@ -1,27 +1,29 @@
 import {
   Cursor,
   delegate,
+  FolderNodeDefaults,
   FoldingManager,
   GraphBuilder,
   GraphComponent,
-  GraphHighlightIndicatorManager,
   type GraphInputMode,
+  GraphItemTypes,
   GraphViewerInputMode,
   type IGraph,
   type IModelItem,
   INode,
   ItemHoverInputMode,
   List,
-  type MouseEventArgs,
   MouseWheelBehaviors,
+  NodeStyleIndicatorRenderer,
   Point,
+  PointerEventArgs,
+  QueryItemToolTipEventArgs,
   Rect,
   ScrollBarVisibility,
   ShapeNodeStyle,
   Size,
-  type SizeChangedEventArgs,
-  GraphItemTypes
-} from 'yfiles'
+  type SizeChangedEventArgs
+} from '@yfiles/yfiles'
 import { TimeframeRectangle } from './TimeframeRectangle'
 import { defaultStyling, Styling, type TimelineStyle } from './Styling'
 import { AggregationFolderNodeConverter } from './AggregationFolderNodeConverter'
@@ -102,7 +104,7 @@ export default class TimelineEngine<TDataItem> {
   /**
    * Instantiates a new timeline.
    * @param parentElement The HTML element to which the timeline is added
-   * @param getTimeEntry The function that extracts the actual date of the data items
+   * @param getTimeRange The function that extracts the actual date of the data items
    * @param style The default timeline style
    * @param showTimeframeRectangle Whether to show timeframe rectangle to focus on parts of the timeline
    * @param showPlayButton Whether to display a button to start/stop the timeframe animation
@@ -116,9 +118,9 @@ export default class TimelineEngine<TDataItem> {
     public showPlayButton = true
   ) {
     this.graphComponent = new GraphComponent()
-    this.parentElement.append(this.graphComponent.div)
-    this.graphComponent.div.style.width = '100%'
-    this.graphComponent.div.style.height = '100%'
+    this.parentElement.append(this.graphComponent.htmlElement)
+    this.graphComponent.htmlElement.style.width = '100%'
+    this.graphComponent.htmlElement.style.height = '100%'
     this.initializeUserInteraction()
     this.initializeFolding()
     this.initializeGraphBuilder(this.graphComponent.graph.foldingView!.manager.masterGraph)
@@ -128,8 +130,8 @@ export default class TimelineEngine<TDataItem> {
     // the zoom specifies the currently visible granularity
     this.zoomTo(2)
     let changeLayout = false
-    this.graphComponent.addSizeChangedListener(
-      (sender: GraphComponent, evt: SizeChangedEventArgs): void => {
+    this.graphComponent.addEventListener('size-changed',
+      (evt: SizeChangedEventArgs): void => {
         if (evt.oldSize.height !== this.graphComponent.size.height && !changeLayout) {
           changeLayout = true
           setTimeout(() => {
@@ -168,7 +170,7 @@ export default class TimelineEngine<TDataItem> {
    * Returns all items associated with the currently selected bars.
    */
   get selectedItems(): TDataItem[] {
-    return this.graphComponent.selection.selectedNodes
+    return this.graphComponent.selection.nodes
       .toArray()
       .flatMap(selectedNode => getItemsFromBucket(selectedNode))
   }
@@ -258,15 +260,16 @@ export default class TimelineEngine<TDataItem> {
 
     // limit the viewport of the timeline to the visible content, such that users cannot pan the content out of view.
     const viewportLimiter = this.graphComponent.viewportLimiter
-    viewportLimiter.honorBothDimensions = true
+    viewportLimiter.strictBoundsContainment = true
+    viewportLimiter.policy = 'strict'
     graphComponent.minimumZoom = graphComponent.maximumZoom = graphComponent.zoom = 1
 
     // this component overwrites the mouse-wheel handling entirely by collapsing / expanding the folded timeline graph
     graphComponent.mouseWheelBehavior = MouseWheelBehaviors.NONE
-    graphComponent.horizontalScrollBarPolicy = ScrollBarVisibility.ALWAYS
+    graphComponent.horizontalScrollBarPolicy = ScrollBarVisibility.VISIBLE
 
     // wire up a custom mousewheel behavior
-    graphComponent.addMouseWheelListener((sender, evt) => {
+    graphComponent.addEventListener('wheel',( evt) => {
       evt.originalEvent?.preventDefault()
       this.updateZoom(evt)
     })
@@ -295,20 +298,20 @@ export default class TimelineEngine<TDataItem> {
    */
   private initializeEvents(inputMode: GraphViewerInputMode): void {
     // bar-chart click listener
-    inputMode.addItemLeftClickedListener((src, args) => {
-      const clickedItem = args.item
+    inputMode.addEventListener('item-left-clicked', (evt, src) => {
+      const clickedItem = evt.item
 
       src.clearSelection()
       src.setSelected(clickedItem, true)
 
       if (clickedItem instanceof INode) {
         if (this.barSelectListener) {
-          args.handled = true
+          evt.handled = true
           this.barSelectListener(getItemsFromBucket(clickedItem))
         }
       }
     })
-    inputMode.addCanvasClickedListener(_ => {
+    inputMode.addEventListener('canvas-clicked', () => {
       this.barSelectListener?.([])
     })
 
@@ -317,22 +320,21 @@ export default class TimelineEngine<TDataItem> {
       protected isValidHoverItem(item: IModelItem): boolean {
         // only consider bar-chart elements and ignore the time legend elements
         if (item instanceof INode) {
-          const graph = this.inputModeContext!.graph!
+          const graph = this.parentInputModeContext!.graph!
           return !graph.isGroupNode(item)
         }
         return false
       }
     })()
     itemHoverInputMode.hoverCursor = Cursor.POINTER
-    itemHoverInputMode.addHoveredItemChangedListener((sender, args) => {
-      const highlightManager = (sender.inputModeContext!.canvasComponent as GraphComponent)
-        .highlightIndicatorManager
-      highlightManager.clearHighlights()
+    itemHoverInputMode.addEventListener('hovered-item-changed', (evt) => {
+      const highlights = (evt.context.canvasComponent as GraphComponent).highlights
+     highlights.clear()
 
       let hoveredItems: TDataItem[] = []
-      if (args.item instanceof INode) {
-        highlightManager.addHighlight(args.item)
-        hoveredItems = getItemsFromBucket<TDataItem>(args.item)
+      if (evt.item instanceof INode) {
+        highlights.add(evt.item)
+        hoveredItems = getItemsFromBucket<TDataItem>(evt.item)
       }
 
       if (this.barHoverListener) {
@@ -344,10 +346,10 @@ export default class TimelineEngine<TDataItem> {
 
   private initializeTooltips(inputMode: GraphInputMode) {
     inputMode.toolTipItems = GraphItemTypes.NODE
-    inputMode.mouseHoverInputMode.toolTipLocationOffset = new Point(14, 14)
-    inputMode.mouseHoverInputMode.duration = '10s'
-    inputMode.mouseHoverInputMode.delay = '0.5s'
-    inputMode.addQueryItemToolTipListener((_, evt) => {
+    inputMode.toolTipInputMode.toolTipLocationOffset = new Point(14, 14)
+    inputMode.toolTipInputMode.duration = '10s'
+    inputMode.toolTipInputMode.delay = '0.5s'
+    inputMode.addEventListener('query-item-tool-tip', (evt: QueryItemToolTipEventArgs<IModelItem>) => {
       if (!(evt.item instanceof INode)) {
         return
       }
@@ -401,12 +403,12 @@ export default class TimelineEngine<TDataItem> {
    * this custom behavior that triggers a collapse/expand on the graph that represents the bar chart
    * of the timeline.
    */
-  private updateZoom(evt: MouseEventArgs): void {
-    if (evt.wheelDelta !== 0) {
+  private updateZoom(evt: PointerEventArgs): void {
+    if (evt.wheelDeltaY !== 0) {
       const mouseLocation = evt.location
       let closestNode: INode | undefined
       let zoomChanged
-      if (evt.wheelDelta > 0) {
+      if (evt.wheelDeltaY > 0) {
         closestNode = this.getClosestNode(mouseLocation)
         zoomChanged = this.zoomIn()
       } else {
@@ -443,10 +445,10 @@ export default class TimelineEngine<TDataItem> {
    * The new viewPoint when keeping the node's location fixed.
    */
   private calculateViewPoint(mouseLocation: Point, node: INode): Point {
-    const mouseView = this.graphComponent.toViewCoordinates(mouseLocation)
-    const nodeCenterView = this.graphComponent.toViewCoordinates(node.layout.center)
+    const mouseView = this.graphComponent.worldToViewCoordinates(mouseLocation)
+    const nodeCenterView = this.graphComponent.worldToViewCoordinates(node.layout.center)
     const newViewpointView = nodeCenterView.subtract(mouseView)
-    return this.graphComponent.toWorldCoordinates(newViewpointView)
+    return this.graphComponent.viewToWorldCoordinates(newViewpointView)
   }
 
   /**
@@ -544,8 +546,10 @@ export default class TimelineEngine<TDataItem> {
     graphComponent.graph = foldingManager.createFoldingView().graph
 
     foldingManager.folderNodeConverter = new AggregationFolderNodeConverter({
-      copyFirstLabel: false,
-      folderNodeSize: [20, 50]
+      folderNodeDefaults: new FolderNodeDefaults({
+        copyLabels: false,
+        size: [20, 50]
+      })
     })
 
     const inputMode = graphComponent.inputMode as GraphInputMode
@@ -585,10 +589,10 @@ export default class TimelineEngine<TDataItem> {
     const graphComponent = this.graphComponent
     const rectangleIndicator = new TimeframeRectangle(graphComponent, style.timeframe)
 
-    rectangleIndicator.setBounds(graphComponent.contentRect)
-    rectangleIndicator.limits = graphComponent.contentRect
+    rectangleIndicator.setBounds(graphComponent.contentBounds)
+    rectangleIndicator.limits = graphComponent.contentBounds
 
-    rectangleIndicator.addBoundsChangedListener(bounds => {
+    rectangleIndicator.setBoundsChangedListener(bounds => {
       this.updateTimeframe(bounds)
     })
 
@@ -674,8 +678,8 @@ export default class TimelineEngine<TDataItem> {
 
     if (nodesInTimeframe.size === 0) {
       return new Rect(
-        graphComponent.contentRect.topLeft,
-        new Size(1, graphComponent.contentRect.height)
+        graphComponent.contentBounds.topLeft,
+        new Size(1, graphComponent.contentBounds.height)
       )
     }
 
@@ -688,9 +692,9 @@ export default class TimelineEngine<TDataItem> {
 
     return new Rect(
       minX,
-      graphComponent.contentRect.y,
+      graphComponent.contentBounds.y,
       maxX - minX,
-      graphComponent.contentRect.height
+      graphComponent.contentBounds.height
     )
   }
 
@@ -700,13 +704,14 @@ export default class TimelineEngine<TDataItem> {
   private initializeStyling(style: TimelineStyle): void {
     this.styling = new Styling(this.graphComponent, style)
 
-    this.graphComponent.highlightIndicatorManager = new GraphHighlightIndicatorManager({
-      nodeStyle: new ShapeNodeStyle({
-        shape: 'rectangle',
-        stroke: `2px solid ${style.barHover?.stroke ?? defaultStyling.barHover?.stroke}`,
-        fill: style.barHover?.fill ?? defaultStyling.barHover?.fill
-      })
-    })
+    this.graphComponent.graph.decorator.nodes.highlightRenderer.addConstant(
+      new NodeStyleIndicatorRenderer({
+        nodeStyle: new ShapeNodeStyle({
+          shape: 'rectangle',
+          stroke: `2px solid ${style.barHover?.stroke ?? defaultStyling.barHover?.stroke}`,
+          fill: style.barHover?.fill ?? defaultStyling.barHover?.fill
+        })
+      }))
   }
 
   /**
@@ -773,7 +778,7 @@ export default class TimelineEngine<TDataItem> {
 
     if (this.showTimeframeRectangle) {
       // The new data may be in an entirely different time slice. If so, update the timeframe to match some data
-      const newTimeFrame = this.getTimeframeFromBounds(this.graphComponent.contentRect)
+      const newTimeFrame = this.getTimeframeFromBounds(this.graphComponent.contentBounds)
       // see if the new data intersects with the timeline - if not - move it into place
       if (
         this._timeframe === UNDEFINED_TIMEFRAME ||
@@ -797,7 +802,7 @@ export default class TimelineEngine<TDataItem> {
           this.timeframe = newTimeFrame
           this.onTimeframeChanged()
         } else {
-          this.updateTimeframe(this.graphComponent.contentRect)
+          this.updateTimeframe(this.graphComponent.contentBounds)
           this.updateTimeframeRectFromTimeframe()
         }
       } else {
@@ -807,7 +812,7 @@ export default class TimelineEngine<TDataItem> {
       }
     } else {
       // Set the timeframe to the whole timeline because nothing is out of focus when there is no timeframe rectangle
-      this.timeframe = this.getTimeframeFromBounds(this.graphComponent.contentRect)
+      this.timeframe = this.getTimeframeFromBounds(this.graphComponent.contentBounds)
       // Fire the filter changed listeners to notify about the changed data, even though the timeframe stayed the same.
       this.onTimeframeChanged()
       this.filterChangedListener?.(this.filter)
@@ -829,9 +834,9 @@ export default class TimelineEngine<TDataItem> {
    */
   updateViewPort(viewPointX?: number): void {
     const graphComponent = this.graphComponent
-    graphComponent.updateContentRect(10)
+    graphComponent.updateContentBounds(10)
 
-    const contentRect = graphComponent.contentRect
+    const contentRect = graphComponent.contentBounds
     graphComponent.viewportLimiter.bounds = contentRect
 
     if (viewPointX === undefined) {
@@ -844,12 +849,12 @@ export default class TimelineEngine<TDataItem> {
       contentRect.maxY - graphComponent.viewport.height
     )
 
-    const minY = Math.min(contentRect.minY, graphComponent.viewport.minY)
+    const minY = Math.min(contentRect.y, graphComponent.viewport.y)
     const maxY = Math.max(contentRect.maxY, graphComponent.viewport.maxY)
-    graphComponent.contentRect = new Rect(contentRect.x, minY, contentRect.width, maxY - minY)
+    graphComponent.contentBounds = new Rect(contentRect.x, minY, contentRect.width, maxY - minY)
 
     if (this.showTimeframeRectangle) {
-      this.timeframeRect.limits = graphComponent.contentRect
+      this.timeframeRect.limits = graphComponent.contentBounds
     }
   }
 
@@ -868,7 +873,7 @@ export default class TimelineEngine<TDataItem> {
    */
   cleanUp(): void {
     this.timeframeRect.cleanup()
-    this.parentElement.removeChild(this.graphComponent.div)
+    this.parentElement.removeChild(this.graphComponent.htmlElement)
     this.graphComponent.cleanUp()
   }
 
