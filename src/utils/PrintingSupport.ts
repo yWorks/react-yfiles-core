@@ -119,8 +119,10 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
   const margins = printSettings.margins ?? Insets.from(0)
   const scale = printSettings.scale ?? 1
   const tiledPrinting = printSettings.tiledPrinting ?? false
-  const tileWidth = printSettings.tileWidth ?? 595
-  const tileHeight = printSettings.tileHeight ?? 842
+  const tileWidth =
+    printSettings.tileWidth && !isNaN(printSettings.tileWidth) ? printSettings.tileWidth : 595
+  const tileHeight =
+    printSettings.tileHeight && !isNaN(printSettings.tileHeight) ? printSettings.tileHeight : 842
   const projection = Matrix.IDENTITY
   const region = printSettings.bounds ?? null
 
