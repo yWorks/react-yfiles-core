@@ -5,15 +5,8 @@ import {
   Point,
   QueryItemToolTipEventArgs,
   TimeSpan
-} from 'yfiles'
-import {
-  ComponentType,
-  createElement,
-  PropsWithChildren,
-  useEffect,
-  useLayoutEffect,
-  useState
-} from 'react'
+} from '@yfiles/yfiles'
+import { ComponentType, createElement, PropsWithChildren, useEffect, useState } from 'react'
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import { DefaultRenderTooltip } from './DefaultRenderTooltip.tsx'
 import './Tooltip.css'
@@ -55,16 +48,13 @@ export function Tooltip<TDataItem>({ renderTooltip, extraProps }: TooltipProps<T
     inputMode.toolTipItems = GraphItemTypes.NODE | GraphItemTypes.EDGE
 
     // Customize the tooltip's behavior to our liking.
-    const mouseHoverInputMode = inputMode.mouseHoverInputMode
+    const mouseHoverInputMode = inputMode.toolTipInputMode
     mouseHoverInputMode.toolTipLocationOffset = new Point(15, 15)
     mouseHoverInputMode.delay = TimeSpan.fromMilliseconds(500)
     mouseHoverInputMode.duration = TimeSpan.fromSeconds(5)
 
     // Register a listener for when a tooltip should be shown.
-    const queryItemTooltipListener = (
-      _: GraphInputMode,
-      evt: QueryItemToolTipEventArgs<IModelItem>
-    ) => {
+    const queryItemTooltipListener = (evt: QueryItemToolTipEventArgs<IModelItem>) => {
       if (evt.handled) {
         // Tooltip content has already been assigned -> nothing to do.
         return
@@ -76,10 +66,10 @@ export function Tooltip<TDataItem>({ renderTooltip, extraProps }: TooltipProps<T
       // Indicate that the tooltip content has been set.
       evt.handled = true
     }
-    inputMode.addQueryItemToolTipListener(queryItemTooltipListener)
+    inputMode.addEventListener('query-item-tool-tip', queryItemTooltipListener)
 
     return () => {
-      inputMode.removeQueryItemToolTipListener(queryItemTooltipListener)
+      inputMode.removeEventListener('query-item-tool-tip', queryItemTooltipListener)
     }
   }, [graphComponent, renderTooltip])
 
@@ -127,12 +117,6 @@ function createTooltipContent<TDataItem>(
  * Wrapper component to ensure that the tooltip is rendered inside the window.
  */
 function TooltipWrapper({ children }: PropsWithChildren) {
-  const graphComponent = useGraphComponent()
-
-  useLayoutEffect(() => {
-    ;(graphComponent.inputMode as GraphInputMode).mouseHoverInputMode.toolTip?.updateLocation()
-  }, [])
-
   return <>{children}</>
 }
 

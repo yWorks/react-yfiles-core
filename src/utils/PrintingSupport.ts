@@ -1,4 +1,13 @@
-import { GraphComponent, IEnumerable, Insets, Matrix, Point, Rect, Size, SvgExport } from 'yfiles'
+import {
+  GraphComponent,
+  IEnumerable,
+  Insets,
+  Matrix,
+  Point,
+  Rect,
+  Size,
+  SvgExport
+} from '@yfiles/yfiles'
 import { attachStyleSheets, createExportGraphComponent } from './ExportSupport'
 import '../styles/fonts.css'
 
@@ -110,8 +119,10 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
   const margins = printSettings.margins ?? Insets.from(0)
   const scale = printSettings.scale ?? 1
   const tiledPrinting = printSettings.tiledPrinting ?? false
-  const tileWidth = printSettings.tileWidth ?? 595
-  const tileHeight = printSettings.tileHeight ?? 842
+  const tileWidth =
+    printSettings.tileWidth && !isNaN(printSettings.tileWidth) ? printSettings.tileWidth : 595
+  const tileHeight =
+    printSettings.tileHeight && !isNaN(printSettings.tileHeight) ? printSettings.tileHeight : 842
   const projection = Matrix.IDENTITY
   const region = printSettings.bounds ?? null
 
@@ -124,11 +135,9 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
     )
   } else {
     targetRect = getBoundsFromPoints(
-      graphComponent
-        .getCanvasObjects(graphComponent.rootGroup)
-        .map(co =>
-          co.descriptor.getBoundsProvider(co.userObject).getBounds(graphComponent.canvasContext)
-        )
+      graphComponent.renderTree
+        .getElements(graphComponent.renderTree.rootGroup)
+        .map(co => co.renderer.getBoundsProvider(co.tag).getBounds(graphComponent.canvasContext))
         .filter(bounds => bounds.isFinite)
         .flatMap(bounds =>
           IEnumerable.from([bounds.topLeft, bounds.topRight, bounds.bottomLeft, bounds.bottomRight])
@@ -249,7 +258,7 @@ async function print(printSettings: PrintSettings, graphComponent: GraphComponen
         }
 
         // collect all stylesheets - dom has to be ready to get them
-        attachStyleSheets(svgElement, graphComponent.div)
+        attachStyleSheets(svgElement, graphComponent.htmlElement)
 
         resultingHTML += SvgExport.exportSvgString(svgElement)
         resultingHTML += '</div>'
@@ -319,6 +328,6 @@ function configureMargin(
     const right = lastColumn ? margins.right : 0
     const left = firstColumn ? margins.left : 0
 
-    exporter.margins = new Insets(left, top, right, bottom)
+    exporter.margins = Insets.from({ top: top, right: right, bottom: bottom, left: left })
   }
 }

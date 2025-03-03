@@ -1,4 +1,4 @@
-import { DefaultGraph, License } from 'yfiles'
+import { Graph, License } from '@yfiles/yfiles'
 import { setWebWorkerLicense } from '../utils/WebworkerSupport.ts'
 import { isProd } from '../utils/DevMode.ts'
 
@@ -28,7 +28,7 @@ export function registerLicense(licenseKey: Record<string, unknown>) {
  */
 export function checkLicense(): boolean {
   if (!isProd) {
-    const g = new DefaultGraph()
+    const g = new Graph()
     g.createNode()
     return g.nodes.size === 1
   }

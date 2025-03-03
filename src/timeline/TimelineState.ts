@@ -1,5 +1,5 @@
 import { useReducer } from 'react'
-import { GraphComponent } from 'yfiles'
+import { GraphComponent } from '@yfiles/yfiles'
 import { TimelineTooltipProps } from './TimelineTooltip/TimelineTooltip'
 import TimelineEngine from './engine/TimelineEngine'
 

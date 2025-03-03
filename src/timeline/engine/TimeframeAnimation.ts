@@ -34,7 +34,7 @@ import {
   type MutableRectangle,
   Point,
   type Rect
-} from 'yfiles'
+} from '@yfiles/yfiles'
 
 type TimeframeListener = (timeframe: Rect) => void
 type AnimationEndedListener = () => void
@@ -64,7 +64,7 @@ export class TimeframeAnimation {
    */
   playAnimation(): void {
     if (!this.animating) {
-      this.animator = new Animator({ canvas: this.timelineComponent, allowUserInteraction: true })
+      this.animator = new Animator({ canvasComponent: this.timelineComponent, allowUserInteraction: true })
 
       // set animating flag
       this.animating = true
@@ -76,7 +76,7 @@ export class TimeframeAnimation {
       void this.animator.animate(() => {
         const timeframe = this.timeframeRect
         const viewport = this.timelineComponent.viewport
-        const maxX = this.timelineComponent.contentRect.x + this.timelineComponent.contentRect.width
+        const maxX = this.timelineComponent.contentBounds.x + this.timelineComponent.contentBounds.width
 
         // stop animation when time frame reached right border or if the input mode gets deactivated
         if (

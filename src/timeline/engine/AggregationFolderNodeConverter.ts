@@ -27,18 +27,18 @@
  **
  ***************************************************************************/
 import {
-  DefaultFolderNodeConverter,
+  FolderNodeConverter,
   type FolderNodeState,
   type IFoldingView,
   type INode,
   Rect
-} from 'yfiles'
+} from '@yfiles/yfiles'
 import type { Bucket } from './bucket-aggregation'
 
 /**
  * A simple folder node converter that maps the aggregated values of the folder to its height.
  */
-export class AggregationFolderNodeConverter extends DefaultFolderNodeConverter {
+export class AggregationFolderNodeConverter extends FolderNodeConverter {
   protected initializeFolderNodeLayout(
     state: FolderNodeState,
     foldingView: IFoldingView,
@@ -61,7 +61,7 @@ export class AggregationFolderNodeConverter extends DefaultFolderNodeConverter {
   private updateLayout(state: FolderNodeState, masterNode: INode): void {
     const aggregatedValue = (masterNode.tag as Bucket<unknown>).aggregatedValue
 
-    const width = this.folderNodeSize?.width ?? 20
+    const width = this.folderNodeDefaults.size?.width ?? 20
     const height = Math.max(aggregatedValue, 1)
     state.layout = new Rect(
       masterNode.layout.center.x - width / 2,

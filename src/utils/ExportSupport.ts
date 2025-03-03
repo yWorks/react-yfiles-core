@@ -1,12 +1,13 @@
 import {
-  DefaultGraph,
   Exception,
+  Graph,
   GraphComponent,
   GraphCopier,
   Insets,
+  IPortStyle,
   Size,
   SvgExport
-} from 'yfiles'
+} from '@yfiles/yfiles'
 import { downloadFile } from './FileIoSupport'
 
 /**
@@ -39,7 +40,7 @@ export async function exportSvg(
   })
 
   // collect all stylesheets - dom has to be ready to get them
-  attachStyleSheets(svgElement, graphComponent.div)
+  attachStyleSheets(svgElement, graphComponent.htmlElement)
 
   return await doEncodeImagesBase64(svgElement, exportSettings)
     .then(() => svgElement)
@@ -146,7 +147,7 @@ export async function exportImage(
   })
 
   // collect all stylesheets - dom has to be ready to get them
-  attachStyleSheets(svgElement, graphComponent.div)
+  attachStyleSheets(svgElement, graphComponent.htmlElement)
 
   return renderSvgToPng(
     svgElement as SVGElement,
@@ -221,7 +222,7 @@ function createSvgExporter(
     // use null and collect all stylesheets later
     cssStyleSheet: null,
     inlineSvgImages: exportSettings.inlineImages ?? true,
-    worldBounds: exportSettings.bounds ?? graphComponent.contentRect,
+    worldBounds: exportSettings.bounds ?? graphComponent.contentBounds,
     encodeImagesBase64: true,
     zoom: exportSettings.zoom ?? 1.0,
     scale: exportSettings.scale ?? 1.0,
@@ -237,12 +238,15 @@ export async function createExportGraphComponent(
   graphComponent: GraphComponent
 ): Promise<GraphComponent> {
   const graphCopier = new GraphCopier()
-  const targetGraph = new DefaultGraph()
+  const targetGraph = new Graph()
+  graphCopier.addEventListener('port-copied', event => {
+    targetGraph.setStyle(event.copy, IPortStyle.VOID_PORT_STYLE)
+  })
   graphCopier.copy(graphComponent.graph, targetGraph)
 
   const exportComponent = new GraphComponent()
   exportComponent.graph = targetGraph
-  exportComponent.contentRect = graphComponent.contentRect
+  exportComponent.contentBounds = graphComponent.contentBounds
   exportComponent.zoom = graphComponent.zoom
 
   return new Promise((resolve, reject) => {

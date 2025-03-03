@@ -27,14 +27,10 @@
  **
  ***************************************************************************/
 import {
-  DefaultLabelStyle,
-  type GraphComponent,
-  INodeInsetsProvider,
-  Insets,
-  InteriorStretchLabelModel,
-  NodeStyleDecorationInstaller,
-  ShapeNodeStyle
-} from 'yfiles'
+  type GraphComponent, IGroupPaddingProvider,
+  Insets, LabelStyle, NodeStyleIndicatorRenderer,
+  ShapeNodeStyle, StretchNodeLabelModel
+} from '@yfiles/yfiles'
 import type { TimeInterval } from './TimelineEngine'
 import { intervalsIntersect } from './Utilities'
 import type { Bucket } from './bucket-aggregation'
@@ -92,19 +88,19 @@ export class Styling {
   readonly inTimeframeStyle: ShapeNodeStyle
 
   readonly groupStyle: ShapeNodeStyle
-  readonly groupStyleEven: DefaultLabelStyle
-  readonly groupStyleOdd: DefaultLabelStyle
+  readonly groupStyleEven: LabelStyle
+  readonly groupStyleOdd: LabelStyle
 
   constructor(
     private readonly graphComponent: GraphComponent,
     private readonly style: TimelineStyle
   ) {
-    const nodeDecorator = graphComponent.graph.decorator.nodeDecorator
-    nodeDecorator.focusIndicatorDecorator.hideImplementation()
-    nodeDecorator.highlightDecorator.hideImplementation()
-    nodeDecorator.selectionDecorator.setFactory(
+    const nodeDecorator = graphComponent.graph.decorator.nodes
+    nodeDecorator.focusRenderer.hide()
+    nodeDecorator.highlightRenderer.hide()
+    nodeDecorator.selectionRenderer.addFactory(
       node =>
-        new NodeStyleDecorationInstaller({
+        new NodeStyleIndicatorRenderer({
           nodeStyle: graphComponent.graph.isGroupNode(node)
             ? new ShapeNodeStyle(style.sectionSelect ?? defaultStyling.sectionSelect)
             : new ShapeNodeStyle(style.barSelect ?? defaultStyling.barSelect),
@@ -112,8 +108,8 @@ export class Styling {
           margins: 2
         })
     )
-    nodeDecorator.insetsProviderDecorator.setImplementation(
-      INodeInsetsProvider.create(() => new Insets(0, 0, 0, 20))
+    nodeDecorator.groupPaddingProvider.addConstant(
+      IGroupPaddingProvider.create(() => new Insets(0, 0, 0, 20))
     )
 
     this.defaultStyle = new ShapeNodeStyle({
@@ -130,13 +126,13 @@ export class Styling {
 
     this.groupStyle = new ShapeNodeStyle({ fill: null, stroke: null })
 
-    this.groupStyleEven = new DefaultLabelStyle({
+    this.groupStyleEven = new LabelStyle({
       backgroundFill:
         this.style.legend?.even?.backgroundFill ?? defaultStyling.legend?.even?.backgroundFill,
       backgroundStroke: null,
       textFill: this.style.legend?.even?.textFill ?? defaultStyling.legend?.even?.textFill,
       font: this.style.legend?.even?.font ?? defaultStyling.legend?.even?.font,
-      insets: 1,
+      padding: 1,
       horizontalTextAlignment: 'center'
     })
     this.groupStyleOdd = this.groupStyleEven.clone()
@@ -159,7 +155,7 @@ export class Styling {
         graph.setStyle(node, this.groupStyle)
         const label = node.labels.at(0)
         if (label) {
-          graph.setLabelLayoutParameter(label, InteriorStretchLabelModel.SOUTH)
+          graph.setLabelLayoutParameter(label, StretchNodeLabelModel.BOTTOM)
           const isEven = bucket.indexInLayer % 2 === 0
           const style = isEven ? this.groupStyleEven : this.groupStyleOdd
           graph.setStyle(label, style)
