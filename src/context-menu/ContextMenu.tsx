@@ -117,11 +117,7 @@ export function ContextMenu<TDataItem>({
         graphComponent.selection.add(event.item)
       }
       setMenuVisible(true)
-      setMenuLocation(
-        graphComponent.viewToPageCoordinates(
-          graphComponent.worldToViewCoordinates(event.queryLocation)
-        )
-      )
+      setMenuLocation(graphComponent.worldToViewCoordinates(event.queryLocation))
       // populate the menu
       populateContextMenu(event)
     }
