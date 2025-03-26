@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, JSX, useState } from 'react'
 import { createPortal } from 'react-dom'
 import TimelineEngine, {
   DataItemFilter,
@@ -7,7 +7,7 @@ import TimelineEngine, {
 } from './engine/TimelineEngine'
 import { TimelineStyle } from './engine/Styling'
 import { useTimelineReducer } from './TimelineState'
-import { TimelineTooltip } from './TimelineTooltip/TimelineTooltip'
+import { TimelineTooltip } from './TimelineTooltip'
 import { TimelinePlayButton } from './TimelinePlayButton'
 
 export interface TimelineProps<TDataItem> {

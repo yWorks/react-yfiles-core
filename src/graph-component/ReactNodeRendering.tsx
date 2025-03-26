@@ -36,7 +36,7 @@ export function useReactNodeRendering<TDataItem>(): {
 }
 
 type NodeTemplateRef = {
-  ref: RefObject<HTMLDivElement>
+  ref: RefObject<HTMLDivElement | null>
   node: INode | null
 }
 
