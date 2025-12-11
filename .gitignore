@@ -4,4 +4,3 @@ dist/
 license.json
 *.tsbuildinfo
 .tsup/*
-package-lock.json
