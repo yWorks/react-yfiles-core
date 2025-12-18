@@ -9,7 +9,6 @@ import {
   SvgExport
 } from '@yfiles/yfiles'
 import { attachStyleSheets, createExportGraphComponent } from './ExportSupport'
-import '../styles/fonts.css'
 
 export async function printDiagram(printSettings: PrintSettings, graphComponent: GraphComponent) {
   await print(printSettings, graphComponent)
@@ -19,8 +18,6 @@ export async function printDiagram(printSettings: PrintSettings, graphComponent:
 const printPage = `<!doctype html>
 <html lang="en">
   <head>
-    <link rel="stylesheet" type="text/css" href="../styles/fonts.css" />
-
     <style>
       .pagebreak {
         display: block;

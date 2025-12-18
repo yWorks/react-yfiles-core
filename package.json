@@ -41,7 +41,8 @@
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18",
-    "@yfiles/yfiles": ">=30"
+    "@yfiles/yfiles": ">=30",
+    "@fontsource/roboto": "^5.2.9"
   },
   "devDependencies": {
     "@types/react": ">=18",
