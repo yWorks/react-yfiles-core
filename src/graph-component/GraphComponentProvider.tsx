@@ -29,7 +29,7 @@ export function useGraphComponent() {
  * the provided component in a provider that provides the created GraphComponent.
  */
 export function withGraphComponentProvider<
-  T extends keyof JSX.IntrinsicElements | JSXElementConstructor<any>
+  T extends keyof React.JSX.IntrinsicElements | JSXElementConstructor<any>
 >(Component: T) {
   return (props: React.ComponentProps<T>) => {
     const graphComponent = useMemo(() => {
@@ -57,7 +57,7 @@ export function withGraphComponentProvider<
  * to a parent in useLayoutEffect().
  */
 export function useAddGraphComponent(
-  parentRef: React.RefObject<HTMLElement>,
+  parentRef: React.RefObject<HTMLElement | null>,
   graphComponent: GraphComponent
 ) {
   useLayoutEffect(() => {

@@ -1,6 +1,6 @@
 import { useReducer } from 'react'
 import { GraphComponent } from '@yfiles/yfiles'
-import { TimelineTooltipProps } from './TimelineTooltip/TimelineTooltip'
+import { TimelineTooltipProps } from './TimelineTooltip'
 import TimelineEngine from './engine/TimelineEngine'
 
 export type TimelineState<T> = {
@@ -27,5 +27,5 @@ function timelineReducer<T>(state: TimelineState<T>, action: TimelineAction<T>) 
 }
 
 export function useTimelineReducer<T>(): [TimelineState<T>, TimelineDispatch<T>] {
-  return useReducer<typeof timelineReducer<T>>(timelineReducer, initialState)
+  return useReducer(timelineReducer<T>, initialState as TimelineState<T>)
 }

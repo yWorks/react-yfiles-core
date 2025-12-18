@@ -189,7 +189,7 @@ export function Popup<TDataItem>({
   function updateLocation(
     graphComponent: GraphComponent,
     item: IModelItem | null,
-    popupContainer: RefObject<HTMLDivElement>,
+    popupContainer: RefObject<HTMLDivElement | null>,
     position?:
       | 'right'
       | 'top'
