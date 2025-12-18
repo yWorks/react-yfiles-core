@@ -1,3 +1,4 @@
+import '@fontsource/roboto'
 export * from './context-menu/ContextMenu.tsx'
 export * from './controls/Controls.tsx'
 export * from './controls/DefaultControlButtons.tsx'
