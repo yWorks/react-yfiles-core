@@ -1,4 +1,4 @@
-import { ControlButton } from './Controls.tsx'
+import type { ControlButton } from './Controls.tsx'
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import { Command } from '@yfiles/yfiles'
 

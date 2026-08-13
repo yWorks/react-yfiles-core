@@ -1,8 +1,8 @@
-import { ComponentType, createElement, JSX, PropsWithChildren } from 'react'
+import { type ComponentType, createElement, type JSX, type PropsWithChildren } from 'react'
 import './Controls.css'
 import { DefaultRenderControls } from './DefaultRenderControls.tsx'
 import { combineCssClasses } from '../utils/combine-css-classes.ts'
-import { Position } from '../types/types.ts'
+import type { Position } from '../types/types.ts'
 
 /**
  * A button in the {@link Controls} component.
@@ -104,7 +104,7 @@ export function Controls({
   position = 'top-right',
   className,
   renderControls = DefaultRenderControls
-}: ControlsProps & PropsWithChildren) {
+}: ControlsProps & PropsWithChildren): JSX.Element {
   const toolbar = createElement(renderControls, {
     buttons: buttons(),
     orientation: orientation,

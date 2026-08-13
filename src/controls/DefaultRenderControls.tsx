@@ -1,10 +1,14 @@
-import { RenderControlsProps } from './Controls.tsx'
+import type { RenderControlsProps } from './Controls.tsx'
 import { combineCssClasses } from '../utils/combine-css-classes.ts'
+import type { JSX } from 'react'
 
 /**
  * The default rendering for the {@link Controls} component.
  */
-export function DefaultRenderControls({ buttons, orientation }: RenderControlsProps) {
+export function DefaultRenderControls({
+  buttons,
+  orientation
+}: RenderControlsProps): JSX.Element[] | null {
   const separatorClass = combineCssClasses([
     'yfiles-react-controls__separator',
     `yfiles-react-controls__separator--${orientation}`

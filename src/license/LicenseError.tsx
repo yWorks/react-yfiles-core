@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import './LicenseError.css'
 
 export interface LicenseErrorProps {
@@ -5,7 +6,7 @@ export interface LicenseErrorProps {
   codeSample: string
 }
 
-export function LicenseError(props: LicenseErrorProps) {
+export function LicenseError(props: LicenseErrorProps): JSX.Element {
   return (
     <>
       <div className="yfiles-react-license-error">

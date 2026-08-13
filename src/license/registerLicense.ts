@@ -18,7 +18,7 @@ import { isProd } from '../utils/DevMode.ts'
  *
  * @param licenseKey - The license key to register
  */
-export function registerLicense(licenseKey: Record<string, unknown>) {
+export function registerLicense(licenseKey: Record<string, unknown>): void {
   License.value = licenseKey
   setWebWorkerLicense(licenseKey)
 }

@@ -1,6 +1,7 @@
 import React, {
   createContext,
-  JSXElementConstructor,
+  type JSX,
+  type JSXElementConstructor,
   useContext,
   useLayoutEffect,
   useMemo
@@ -16,7 +17,7 @@ const GraphComponentContext = createContext<GraphComponent | null>(null)
  * While it is highly versatile, proficiency is required for effective application.
  * @returns the GraphComponent used to display the graph.
  */
-export function useGraphComponent() {
+export function useGraphComponent(): GraphComponent {
   const graphComponent = useContext(GraphComponentContext)
   if (!graphComponent) {
     throw new Error('GraphComponent is not available in this context.')
@@ -31,7 +32,7 @@ export function useGraphComponent() {
 export function withGraphComponentProvider<
   T extends keyof React.JSX.IntrinsicElements | JSXElementConstructor<any>
 >(Component: T) {
-  return (props: React.ComponentProps<T>) => {
+  return (props: React.ComponentProps<T>): JSX.Element => {
     const graphComponent = useMemo(() => {
       const graphComponent = new GraphComponent()
       graphComponent.htmlElement.style.width = '100%'
@@ -59,7 +60,7 @@ export function withGraphComponentProvider<
 export function useAddGraphComponent(
   parentRef: React.RefObject<HTMLElement | null>,
   graphComponent: GraphComponent
-) {
+): void {
   useLayoutEffect(() => {
     if (parentRef.current) {
       const firstChild = parentRef.current.firstChild
@@ -69,7 +70,7 @@ export function useAddGraphComponent(
         parentRef.current.appendChild(graphComponent.htmlElement)
       }
     }
-    return () => {
+    return (): void => {
       if (parentRef.current) {
         parentRef.current.removeChild(graphComponent.htmlElement)
       }

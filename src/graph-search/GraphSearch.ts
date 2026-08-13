@@ -1,13 +1,13 @@
 import {
   Color,
-  GraphComponent,
+  type GraphComponent,
   HighlightIndicatorManager,
-  IHighlightRenderer,
-  IModelItem,
+  type IHighlightRenderer,
+  type IModelItem,
   INode,
   Insets,
-  IObjectRenderer,
-  IObservableCollection,
+  type IObjectRenderer,
+  type IObservableCollection,
   NodeStyleIndicatorRenderer,
   Point,
   Rect,
@@ -151,7 +151,7 @@ export class GraphSearch<TNeedle> {
    * @param input An HTML `input` element that is used as a search input.
    * @param autoCompleteSuggestions A list of possible auto-complete suggestion strings.
    */
-  updateAutoCompleteSuggestions(input: HTMLInputElement, autoCompleteSuggestions: string[]) {
+  updateAutoCompleteSuggestions(input: HTMLInputElement, autoCompleteSuggestions: string[]): void {
     const datalist = input.list
     if (!datalist) {
       return
@@ -206,7 +206,7 @@ export class GraphSearch<TNeedle> {
   }
 }
 
-function hasSelectedElementFromDatalist(input: HTMLInputElement, searchText: string) {
+function hasSelectedElementFromDatalist(input: HTMLInputElement, searchText: string): boolean {
   if (input.list) {
     for (const option of Array.from(input.list.children)) {
       if (option instanceof HTMLOptionElement && option.value === searchText) {

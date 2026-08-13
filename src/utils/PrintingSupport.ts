@@ -1,16 +1,19 @@
 import {
-  GraphComponent,
+  type GraphComponent,
   IEnumerable,
   Insets,
   Matrix,
-  Point,
+  type Point,
   Rect,
   Size,
   SvgExport
 } from '@yfiles/yfiles'
 import { attachStyleSheets, createExportGraphComponent } from './ExportSupport'
 
-export async function printDiagram(printSettings: PrintSettings, graphComponent: GraphComponent) {
+export async function printDiagram(
+  printSettings: PrintSettings,
+  graphComponent: GraphComponent
+): Promise<void> {
   await print(printSettings, graphComponent)
 }
 
@@ -292,7 +295,7 @@ function getPointsForTile(bounds: Rect, invertedProjection: Matrix): Point[] {
 }
 
 // Returns the projected bounding box for the given points
-function getBoundsFromPoints(points: Iterable<Point>, projection: Matrix) {
+function getBoundsFromPoints(points: Iterable<Point>, projection: Matrix): Rect {
   let bounds = Rect.EMPTY
   for (const p of points) {
     bounds = bounds.add(projection.transform(p))

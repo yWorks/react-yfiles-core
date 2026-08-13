@@ -1,4 +1,5 @@
-import { Arrow as YArrow, ArrowType, IArrow, PolylineEdgeStyle, Stroke } from '@yfiles/yfiles'
+import type { IArrow} from '@yfiles/yfiles';
+import { Arrow as YArrow, ArrowType, PolylineEdgeStyle, Stroke } from '@yfiles/yfiles'
 
 /**
  * A connection style configuration.
@@ -53,7 +54,7 @@ export interface Arrow {
 /**
  * Converts the input style to a yFiles PolylineEdgeStyle.
  */
-export function convertToPolylineEdgeStyle(style: EdgeStyle) {
+export function convertToPolylineEdgeStyle(style: EdgeStyle): PolylineEdgeStyle {
   return new PolylineEdgeStyle({
     smoothingLength: style.smoothingLength ?? 0,
     stroke: new Stroke({

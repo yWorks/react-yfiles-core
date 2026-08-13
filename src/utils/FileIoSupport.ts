@@ -17,7 +17,7 @@ export function downloadFile(content: string, filename: string, contentType?: st
   document.body.removeChild(aElement)
 }
 
-function createBlob(content: string, type: string) {
+function createBlob(content: string, type: string): Blob {
   switch (type) {
     case 'application/pdf': {
       const uint8Array = new Uint8Array(content.length)

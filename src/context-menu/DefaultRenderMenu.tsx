@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { ContextMenuItem } from './ContextMenu.tsx'
+import type { ReactNode } from 'react'
+import type { ContextMenuItem } from './ContextMenu.tsx'
 
 /**
  * The default rendering for the context menu component.

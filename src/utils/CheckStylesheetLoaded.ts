@@ -1,6 +1,6 @@
 import { isProd } from './DevMode.ts'
 
-export function checkStylesheetLoaded(root: HTMLElement, name: string) {
+export function checkStylesheetLoaded(root: HTMLElement, name: string): void {
   //@ts-ignore
   if (!isProd && !window['skip-react-yfiles-css-check']) {
     const dummy = document.createElement('div')
@@ -23,7 +23,7 @@ export function checkStylesheetLoaded(root: HTMLElement, name: string) {
   }
 }
 
-function displayCssWarning(root: HTMLElement, componentName: string) {
+function displayCssWarning(root: HTMLElement, componentName: string): void {
   if (root.getAttribute('cssWarningAdded')) {
     return
   }

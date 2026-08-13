@@ -1,12 +1,12 @@
 import { GraphSearch } from './GraphSearch'
-import { GraphComponent, INode } from '@yfiles/yfiles'
+import type { GraphComponent, INode } from '@yfiles/yfiles'
 import { useCallback, useEffect, useMemo } from 'react'
 
 export function useGraphSearch<TDataItem, TNeedle>(
   graphComponent: GraphComponent,
   searchQuery?: TNeedle,
   onSearch?: (item: TDataItem, needle: TNeedle) => boolean
-) {
+): NodeTagSearch<TDataItem, TNeedle> {
   const graphSearch = useMemo(() => new NodeTagSearch(graphComponent, onSearch), [graphComponent])
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function useGraphSearch<TDataItem, TNeedle>(
   useEffect(() => {
     graphComponent.graph.addEventListener('node-created', updateSearch)
     graphComponent.graph.addEventListener('node-removed', updateSearch)
-    return () => {
+    return (): void => {
       graphComponent.graph.removeEventListener('node-created', updateSearch)
       graphComponent.graph.removeEventListener('node-removed', updateSearch)
     }

@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { type JSX, useEffect, useRef } from 'react'
 import { GraphOverviewComponent } from '@yfiles/yfiles'
 import './Overview.css'
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import { combineCssClasses } from '../utils/combine-css-classes.ts'
-import { Position } from '../types/types.ts'
+import type { Position } from '../types/types.ts'
 
 /**
  * The props for the {@link Overview} component.
@@ -39,14 +39,18 @@ export interface OverviewProps {
  * }
  * ```
  */
-export function Overview({ title = 'Overview', className, position = 'top-left' }: OverviewProps) {
+export function Overview({
+  title = 'Overview',
+  className,
+  position = 'top-left'
+}: OverviewProps): JSX.Element {
   const graphComponent = useGraphComponent()
   const overviewContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (overviewContainer.current && graphComponent) {
       const overview = new GraphOverviewComponent(overviewContainer.current, graphComponent)
-      return () => {
+      return (): void => {
         overview.cleanUp()
       }
     }

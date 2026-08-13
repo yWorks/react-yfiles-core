@@ -1,12 +1,19 @@
 import {
-  GraphInputMode,
+  type GraphInputMode,
   GraphItemTypes,
-  IModelItem,
+  type IModelItem,
   Point,
-  QueryItemToolTipEventArgs,
+  type QueryItemToolTipEventArgs,
   TimeSpan
 } from '@yfiles/yfiles'
-import { ComponentType, createElement, PropsWithChildren, useEffect, useState } from 'react'
+import {
+  type ComponentType,
+  createElement,
+  type JSX,
+  type PropsWithChildren,
+  useEffect,
+  useState
+} from 'react'
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import { DefaultRenderTooltip } from './DefaultRenderTooltip.tsx'
 import './Tooltip.css'
@@ -34,7 +41,10 @@ export interface TooltipProps<TDataItem> {
  * The Tooltip component adds an item tooltip to its parent component. It is designed to be used inside a
  * parent component that displays the graph.
  */
-export function Tooltip<TDataItem>({ renderTooltip, extraProps }: TooltipProps<TDataItem>) {
+export function Tooltip<TDataItem>({
+  renderTooltip,
+  extraProps
+}: TooltipProps<TDataItem>): JSX.Element {
   const graphComponent = useGraphComponent()!
 
   const [tooltipRenderInfo, setTooltipRenderInfo] = useState<TooltipRenderInfo<TDataItem> | null>(
@@ -54,7 +64,7 @@ export function Tooltip<TDataItem>({ renderTooltip, extraProps }: TooltipProps<T
     mouseHoverInputMode.duration = TimeSpan.fromSeconds(5)
 
     // Register a listener for when a tooltip should be shown.
-    const queryItemTooltipListener = (evt: QueryItemToolTipEventArgs<IModelItem>) => {
+    const queryItemTooltipListener = (evt: QueryItemToolTipEventArgs<IModelItem>): void => {
       if (evt.handled) {
         // Tooltip content has already been assigned -> nothing to do.
         return
@@ -68,7 +78,7 @@ export function Tooltip<TDataItem>({ renderTooltip, extraProps }: TooltipProps<T
     }
     inputMode.addEventListener('query-item-tool-tip', queryItemTooltipListener)
 
-    return () => {
+    return (): void => {
       inputMode.removeEventListener('query-item-tool-tip', queryItemTooltipListener)
     }
   }, [graphComponent, renderTooltip])
@@ -116,7 +126,7 @@ function createTooltipContent<TDataItem>(
 /**
  * Wrapper component to ensure that the tooltip is rendered inside the window.
  */
-function TooltipWrapper({ children }: PropsWithChildren) {
+function TooltipWrapper({ children }: PropsWithChildren): JSX.Element {
   return <>{children}</>
 }
 
