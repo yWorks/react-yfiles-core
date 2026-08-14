@@ -1,28 +1,35 @@
 import {
   createElement,
   createRef,
-  Dispatch,
-  ReactNode,
-  RefObject,
-  SetStateAction,
+  type Dispatch,
+  type JSX,
+  type ReactNode,
+  type RefObject,
+  type SetStateAction,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState
 } from 'react'
-import { FilteredGraphWrapper, GraphComponent, IGraph, INode, Rect } from '@yfiles/yfiles'
 import {
-  NodeRenderInfo,
+  type NodeRenderInfo,
   ReactComponentHtmlNodeStyle,
-  RenderNodeProps
+  type RenderNodeProps
 } from './ReactComponentHtmlNodeStyle.ts'
 import { useGraphComponent } from './GraphComponentProvider.tsx'
 import { createPortal } from 'react-dom'
 import {
   ReactComponentHtmlGroupNodeStyle,
-  RenderGroupNodeProps
+  type RenderGroupNodeProps
 } from './ReactComponentHtmlGroupNodeStyle.ts'
+import {
+  FilteredGraphWrapper,
+  type GraphComponent,
+  type IGraph,
+  type INode,
+  Rect
+} from '@yfiles/yfiles'
 
 export function useReactNodeRendering<TDataItem>(): {
   nodeInfos: NodeRenderInfo<TDataItem>[]
@@ -70,7 +77,7 @@ export function ReactNodeRendering<TDataItem extends SizedDataItem>({
   onRendered,
   extraProps,
   measureTrigger
-}: ReactNodeRenderingProps<TDataItem>) {
+}: ReactNodeRenderingProps<TDataItem>): JSX.Element {
   return (
     <>
       <NodeMeasurement
@@ -100,7 +107,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
   maxSize,
   onMeasured,
   measureTrigger
-}: NodeMeasurementProps<TDataItem>) {
+}: NodeMeasurementProps<TDataItem>): JSX.Element {
   const graphComponent = useGraphComponent()!
 
   const [measureElements, setMeasureElements] = useState<ReactNode[]>([])
@@ -159,7 +166,7 @@ function NodeMeasurement<TDataItem extends SizedDataItem>({
       setMeasureElements(elements)
     }
 
-    return () => {
+    return (): void => {
       myRef.current = []
     }
   }, [graphComponent, nodeData, nodeSize, measureTrigger])
@@ -216,7 +223,7 @@ function RenderNodes<TDataItem>({
   nodeInfos,
   onRendered,
   extraProps
-}: RenderNodesProps<TDataItem>) {
+}: RenderNodesProps<TDataItem>): JSX.Element {
   useEffect(() => {
     onRendered?.()
   })

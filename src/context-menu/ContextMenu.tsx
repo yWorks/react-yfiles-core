@@ -1,12 +1,17 @@
 import {
-  ComponentType,
+  type ComponentType,
   createElement,
-  PropsWithChildren,
+  type JSX,
+  type PropsWithChildren,
   useCallback,
   useLayoutEffect,
   useState
 } from 'react'
-import { GraphViewerInputMode, IModelItem, PopulateItemContextMenuEventArgs } from '@yfiles/yfiles'
+import type {
+  GraphViewerInputMode,
+  IModelItem,
+  PopulateItemContextMenuEventArgs
+} from '@yfiles/yfiles'
 import { useGraphComponent } from '../graph-component/GraphComponentProvider.tsx'
 import './ContextMenu.css'
 import { DefaultRenderMenu } from './DefaultRenderMenu.tsx'
@@ -80,7 +85,7 @@ export function ContextMenu<TDataItem>({
   menuItems,
   renderMenu,
   extraProps
-}: ContextMenuProps<TDataItem> & PropsWithChildren) {
+}: ContextMenuProps<TDataItem> & PropsWithChildren): JSX.Element {
   const [menuVisible, setMenuVisible] = useState(false)
   const [menuLocation, setMenuLocation] = useState({ x: 0, y: 0 })
   const [dataItem, setDataItem] = useState<TDataItem | null>(null)
@@ -103,14 +108,16 @@ export function ContextMenu<TDataItem>({
    */
   useLayoutEffect(() => {
     // register the close listener
-    const closeMenuListener = () => {
+    const closeMenuListener = (): void => {
       setMenuVisible(false)
     }
     const inputMode = graphComponent.inputMode as GraphViewerInputMode
     inputMode.contextMenuInputMode.addEventListener('menu-closed', closeMenuListener)
 
     // register populate items listener
-    const populateContextMenuListener = (event: PopulateItemContextMenuEventArgs<IModelItem>) => {
+    const populateContextMenuListener = (
+      event: PopulateItemContextMenuEventArgs<IModelItem>
+    ): void => {
       // select the item
       if (event.item) {
         graphComponent.selection.clear()
@@ -123,7 +130,7 @@ export function ContextMenu<TDataItem>({
     }
     inputMode.addEventListener('populate-item-context-menu', populateContextMenuListener)
 
-    return () => {
+    return (): void => {
       // cleanup
       inputMode.contextMenuInputMode.removeEventListener('menu-closed', closeMenuListener)
       inputMode.removeEventListener('populate-item-context-menu', populateContextMenuListener)
@@ -162,7 +169,7 @@ function ContextMenuCore<TDataItem>({
   dataItem: TDataItem | null
   onClose: Function
   menuLocation: { x: number; y: number }
-}) {
+}): JSX.Element {
   const menu = createElement(renderMenu, {
     menuItems: menuItems ? menuItems(dataItem) : [],
     item: dataItem,

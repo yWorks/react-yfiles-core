@@ -7,7 +7,7 @@ import type {
   Visual
 } from '@yfiles/yfiles'
 import { HtmlVisual, NodeStyleBase } from '@yfiles/yfiles'
-import { ComponentType, Dispatch, memo, SetStateAction } from 'react'
+import { type ComponentType, type Dispatch, memo, type SetStateAction } from 'react'
 
 /**
  * A React component rendering a node described by the {@link RenderNodeProps}.
@@ -198,7 +198,10 @@ export class ReactComponentHtmlNodeStyle<TDataItem> extends NodeStyleBase<
     return oldVisual
   }
 
-  protected areEqual(oldProps: RenderNodeProps<TDataItem>, newProps: RenderNodeProps<TDataItem>) {
+  protected areEqual(
+    oldProps: RenderNodeProps<TDataItem>,
+    newProps: RenderNodeProps<TDataItem>
+  ): boolean {
     return (
       oldProps.selected === newProps.selected &&
       oldProps.hovered === newProps.hovered &&

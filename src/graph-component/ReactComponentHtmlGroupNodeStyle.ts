@@ -1,11 +1,11 @@
-import { ComponentType, Dispatch, SetStateAction } from 'react'
+import type { ComponentType, Dispatch, SetStateAction } from 'react'
 import type { GraphComponent, INode, IRenderContext } from '@yfiles/yfiles'
 import {
   defaultTagProvider,
-  NodeRenderInfo,
+  type NodeRenderInfo,
   ReactComponentHtmlNodeStyle,
-  RenderNodeProps,
-  TagProvider
+  type RenderNodeProps,
+  type TagProvider
 } from './ReactComponentHtmlNodeStyle.ts'
 
 export interface RenderGroupNodeProps<TDataItem> extends RenderNodeProps<TDataItem> {

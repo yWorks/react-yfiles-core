@@ -3,7 +3,7 @@ let license: Record<string, unknown> | null = null
 /**
  * Sets the license to be used for initializing web workers in {@link createWebworker}.
  */
-export function setWebWorkerLicense(licensePar: Record<string, unknown>) {
+export function setWebWorkerLicense(licensePar: Record<string, unknown>): void {
   license = licensePar
 }
 
@@ -30,7 +30,7 @@ export function registerWebWorker(worker: Worker): Promise<Worker> {
   }
 
   return new Promise(resolve => {
-    worker.onmessage = event => {
+    worker.onmessage = (event: MessageEvent): void => {
       if (event.data === 'ready') {
         worker.postMessage({
           license

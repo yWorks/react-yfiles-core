@@ -1,8 +1,9 @@
 import {
-  ComponentType,
+  type ComponentType,
   createElement,
-  PropsWithChildren,
-  RefObject,
+  type JSX,
+  type PropsWithChildren,
+  type RefObject,
   useEffect,
   useRef,
   useState
@@ -12,14 +13,14 @@ import {
   EdgePathLabelModel,
   ExteriorNodeLabelModel,
   ExteriorNodeLabelModelPosition,
-  GraphComponent,
-  GraphInputMode,
+  type GraphComponent,
+  type GraphInputMode,
   GraphItemTypes,
   IEdge,
-  ILabelOwner,
-  IModelItem,
+  type ILabelOwner,
+  type IModelItem,
   INode,
-  ItemClickedEventArgs,
+  type ItemClickedEventArgs,
   Point,
   PointerButtons,
   PointerType,
@@ -52,14 +53,7 @@ export interface PopupProps<TDataItem> {
    * The position of the popup.
    */
   position?:
-    | 'right'
-    | 'top'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom'
-    | 'bottom-right'
-    | 'bottom-left'
-    | 'left'
+    'right' | 'top' | 'top-right' | 'top-left' | 'bottom' | 'bottom-right' | 'bottom-left' | 'left'
   /**
    * An optional custom that renders a custom popup.
    */
@@ -89,7 +83,7 @@ export function Popup<TDataItem>({
   position,
   clickMode,
   extraProps
-}: PopupProps<TDataItem> & PropsWithChildren) {
+}: PopupProps<TDataItem> & PropsWithChildren): JSX.Element {
   const graphComponent = useGraphComponent()!
   const [location, setLocation] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [currentItem, setCurrentItem] = useState<IModelItem | null>(null)
@@ -108,17 +102,17 @@ export function Popup<TDataItem>({
     const inputMode = graphComponent.inputMode as GraphInputMode
     inputMode.focusableItems = GraphItemTypes.NODE | GraphItemTypes.EDGE
 
-    const canvasClickedListener = () => {
+    const canvasClickedListener = (): void => {
       setCurrentItem(null)
     }
     inputMode.addEventListener('canvas-clicked', canvasClickedListener)
 
-    const viewportChangedListener = () => {
+    const viewportChangedListener = (): void => {
       updateLocation(graphComponent, graphComponent.currentItem, popupContainerRef, position)
     }
     graphComponent.addEventListener('viewport-changed', viewportChangedListener)
 
-    const itemClickedListener = (evt: ItemClickedEventArgs<IModelItem>) => {
+    const itemClickedListener = (evt: ItemClickedEventArgs<IModelItem>): void => {
       if (
         evt.pointerType === PointerType.TOUCH ||
         (evt.pointerButtons & PointerButtons.MOUSE_LEFT) === PointerButtons.MOUSE_LEFT ||
@@ -138,7 +132,7 @@ export function Popup<TDataItem>({
         break
     }
 
-    return () => {
+    return (): void => {
       // clean up
       inputMode.removeEventListener('canvas-clicked', canvasClickedListener)
       graphComponent.removeEventListener('viewport-changed', viewportChangedListener)
@@ -199,7 +193,7 @@ export function Popup<TDataItem>({
       | 'bottom-right'
       | 'bottom-left'
       | 'left'
-  ) {
+  ): void {
     if (!popupContainer.current || !item) {
       return
     }
@@ -230,15 +224,8 @@ export function Popup<TDataItem>({
  */
 function convertToLabelModelParameter(
   position?:
-    | 'right'
-    | 'top'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom'
-    | 'bottom-right'
-    | 'bottom-left'
-    | 'left'
-) {
+    'right' | 'top' | 'top-right' | 'top-left' | 'bottom' | 'bottom-right' | 'bottom-left' | 'left'
+): ExteriorNodeLabelModelPosition {
   switch (position) {
     default:
     case 'top':

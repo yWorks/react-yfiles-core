@@ -4,7 +4,7 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "module": "ESNext",
-    "target": "ESNext",
+    "target": "es2023",
     "strict": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
@@ -14,9 +14,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "jsx": "react-jsx",
-    "moduleResolution": "node"
+    "moduleResolution": "bundler"
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"]
 }

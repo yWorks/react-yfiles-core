@@ -32,7 +32,7 @@ export async function exportSvg(
   exportSettings: ExportSettings,
   graphComponent: GraphComponent,
   onRendered: (cb: () => void) => void
-) {
+): Promise<string> {
   const svgElement = await exportSvgElement(exportSettings, graphComponent)
 
   await new Promise<void>((resolve, reject) => {
@@ -256,7 +256,7 @@ export async function createExportGraphComponent(
   })
 }
 
-function decodeSvgDataUrl(body: string, base64: boolean) {
+function decodeSvgDataUrl(body: string, base64: boolean): string {
   if (base64) {
     // This method is (currently) only called with base64=true in IE when the XHR on a data url fails.
     // To properly support Unicode characters we would need to manually decode the binary string using the charset
@@ -272,7 +272,7 @@ function decodeSvgDataUrl(body: string, base64: boolean) {
   }
 }
 
-function doEncodeImagesBase64(element: Element, exportSettings: ExportSettings) {
+function doEncodeImagesBase64(element: Element, exportSettings: ExportSettings): Promise<void[]> {
   const allImages = element.querySelectorAll('image,img')
   const inlineImages = exportSettings.inlineImages ?? true
 
@@ -292,7 +292,7 @@ function doEncodeImagesBase64(element: Element, exportSettings: ExportSettings) 
           new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest()
 
-            xhr.onreadystatechange = () => {
+            xhr.onreadystatechange = (): void => {
               if (xhr.readyState != XMLHttpRequest.DONE) {
                 return
               }
@@ -395,7 +395,7 @@ function doEncodeImagesBase64(element: Element, exportSettings: ExportSettings) 
   return Promise.all(promises)
 }
 
-function fromByteArray(a: number[]) {
+function fromByteArray(a: number[]): string {
   let result = ''
   for (let i = 0; i < a.length; i++) {
     result += String.fromCharCode(a[i])
@@ -403,7 +403,7 @@ function fromByteArray(a: number[]) {
   return result
 }
 
-function fromBase64String(base64: string) {
+function fromBase64String(base64: string): number[] {
   const length = base64.length
   const bytes = []
   let padding = 0
@@ -492,7 +492,7 @@ function ruleMatches(cssRule: CSSRule, svgElement: Element): boolean {
 /**
  * Collects and attaches all necessary stylesheets to the exported svgElement.
  */
-export function attachStyleSheets(svgElement: Element, domElement: Element) {
+export function attachStyleSheets(svgElement: Element, domElement: Element): void {
   const styleSheets = collectDocumentStyles(svgElement, domElement)
   const style = document.createElementNS('http://www.w3.org/2000/svg', 'style')
   style.textContent = styleSheets

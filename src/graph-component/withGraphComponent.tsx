@@ -1,9 +1,9 @@
-import { ComponentType, useRef } from 'react'
+import { type ComponentType, type JSX, useRef } from 'react'
 import { useAddGraphComponent, useGraphComponent } from '../index.ts'
 import './GraphComponentStyles.css'
 
 export function withGraphComponent(Component: ComponentType<any>) {
-  return (props: any) => {
+  return (props: any): JSX.Element => {
     const graphComponent = useGraphComponent()!
 
     const gcContainer = useRef<HTMLDivElement>(null)
