@@ -2,7 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/@yworks/react-yfiles-core?style=flat)](https://www.npmjs.org/package/@yworks/react-yfiles-core)
 
-The **`@yworks/react-yfiles-core`** module provides shared features, components, and utilities for the yFiles React ecosystem.
+The **`@yworks/react-yfiles-core`** module provides shared features, components, and utilities for the yFiles React components.
 
 > **Important:** This is a shared core module and is **not intended to be used by itself**. Instead, it acts as a required dependency for specialized, domain-specific yFiles React diagramming components.
 
